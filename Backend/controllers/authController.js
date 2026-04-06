@@ -28,10 +28,17 @@ exports.signup = async (req, res) => {
     const { name, email, password, confirmPassword, location } = req.body;
 
     // Validation
-    if (!name || !email || !password || !confirmPassword || !location) {
+    if (!name || !email || !password || !confirmPassword) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
+      });
+    }
+
+    if (!location || location.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide your location",
       });
     }
 
