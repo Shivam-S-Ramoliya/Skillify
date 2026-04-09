@@ -50,7 +50,8 @@ The platform is built around profile trust, verified accounts, and transparent a
 - JWT auth
 - Multer (memory storage uploads)
 - Cloudinary (images/documents)
-- Nodemailer (email flows)
+- Resend (email flows via HTTP API)
+- Nodemailer (backup email service — Gmail SMTP)
 
 ## 🗂️ Repository structure
 
@@ -141,14 +142,19 @@ Create `Backend/.env`:
 
 ```env
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/skillify
+MONGODB_URI=mongodb://localhost:27017/skillify
 JWT_SECRET=your_jwt_secret
-CLIENT_URL=http://localhost:5173
+NODE_ENV=development
 
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@example.com
-EMAIL_PASS=your-app-password
+# Email Configuration (Resend) - Currently Active
+RESEND_API_KEY=your_resend_api_key
+
+# Nodemailer Gmail SMTP (Backup - use with emailService_Nodemailer.js)
+# EMAIL_USER=your-email@example.com
+# EMAIL_PASS=your-gmail-app-password
+# EMAIL_FROM=your-email@example.com
+
+FRONTEND_URL=http://localhost:5173
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
@@ -180,10 +186,24 @@ Frontend runs on `http://localhost:5173`.
    - publish jobs and review applicants.
 4. Manage application/job statuses from dashboard pages.
 
+## 📧 Email service
+
+Skillify uses **two email service files**:
+
+| File | Transport | When to use |
+|------|-----------|-------------|
+| `emailService.js` | **Resend HTTP API** | Production (Render) — active |
+| `emailService_Nodemailer.js` | **Gmail SMTP** | Local dev or non-Render hosts — backup |
+
+**To switch to Nodemailer:** rename `emailService_Nodemailer.js` → `emailService.js`, uncomment the `EMAIL_*` variables in `.env`, and comment out `RESEND_API_KEY`.
+
+> **Why Resend?** Render's free tier blocks outbound SMTP (ports 25/465/587). Resend uses HTTPS (port 443).
+
 ## 🆘 Troubleshooting quick notes
 
 - If uploads fail, verify Cloudinary credentials and file size limits. 📤
-- If emails fail, verify SMTP credentials and app password. 📧
+- If emails fail (Resend), verify `RESEND_API_KEY` is set correctly. 📧
+- If emails fail (Nodemailer), verify `EMAIL_USER` and `EMAIL_PASS` (Gmail app password). 📧
 - If frontend cannot reach backend, check API base URL and CORS/client URL settings. 🌐
 
 ## 🤝 Contributing

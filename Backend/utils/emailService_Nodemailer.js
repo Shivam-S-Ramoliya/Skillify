@@ -1,36 +1,35 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-// ────────────────────────────────────────────────────────────────
-// Resend HTTP API Transport
-// Works on Render free tier (no SMTP ports needed, uses HTTPS)
-// Backup: emailService_Nodemailer.js (Gmail SMTP version)
-// ────────────────────────────────────────────────────────────────
+// Debug: Check if env variables are loaded
+console.log("EMAIL_USER:", process.env.EMAIL_USER ? "✓ Loaded" : "✗ Missing");
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "✓ Loaded" : "✗ Missing");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Create transporter with explicit SMTP settings
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-// On Resend free tier (no custom domain) you MUST send from onboarding@resend.dev
-// To use your own address, add + verify your domain at https://resend.com/domains
-const FROM_EMAIL = "Skillify <onboarding@resend.dev>";
+// Verify connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("❌ Email service error:", error.message);
+    console.log("Credentials - User:", process.env.EMAIL_USER);
+    console.log(
+      "Credentials - Pass length:",
+      process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0,
+    );
+  } else {
+    console.log("✅ Email service ready");
+  }
+});
 
-console.log("✅ Email service: using Resend HTTP API");
-console.log("   From address:", FROM_EMAIL);
-
-// Send email via Resend
-const sendMail = async ({ to, subject, html }) => {
-  const { data, error } = await resend.emails.send({
-    from: FROM_EMAIL,
-    to: Array.isArray(to) ? to : [to],
-    subject,
-    html,
-  });
-  if (error) throw new Error(error.message || "Resend API error");
-  console.log("Email sent via Resend:", data?.id);
-  return data;
-};
-
-// ────────────────────────────────────────────────────────────────
 // Shared email wrapper with Skillify branding
-// ────────────────────────────────────────────────────────────────
 const emailWrapper = (content) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -75,10 +74,6 @@ const emailWrapper = (content) => `
 </html>
 `;
 
-// ────────────────────────────────────────────────────────────────
-// Email senders
-// ────────────────────────────────────────────────────────────────
-
 // Send verification email with a signed link
 const sendVerificationEmail = async (email, verificationToken, name) => {
   try {
@@ -108,12 +103,15 @@ const sendVerificationEmail = async (email, verificationToken, name) => {
               <p style="margin: 18px 0 0; color: #9CA3AF; font-size: 12px; text-align: center;">This verification link expires in <strong style="color: #4f46e5;">24 hours</strong>.</p>
         `;
 
-    await sendMail({
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
       subject: "Verify Your Skillify Account",
       html: emailWrapper(content),
-    });
-    console.log("Verification email sent to:", email);
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Verification email sent:", info.messageId);
     return true;
   } catch (error) {
     console.error("Verification email error:", error.message);
@@ -168,12 +166,15 @@ const sendWelcomeEmail = async (email, name) => {
               <p style="margin: 0; color: #9CA3AF; font-size: 13px; text-align: center;">Welcome aboard! &#127891;</p>
         `;
 
-    await sendMail({
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
       subject: "Welcome to Skillify! 🎉",
       html: emailWrapper(content),
-    });
-    console.log("Welcome email sent to:", email);
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Welcome email sent:", info.messageId);
     return true;
   } catch (error) {
     console.error("Welcome email error:", error.message);
@@ -210,12 +211,15 @@ const sendPasswordResetEmail = async (email, name, resetToken) => {
               <p style="margin: 18px 0 0; color: #9CA3AF; font-size: 12px; text-align: center;">This reset link expires in <strong style="color: #4f46e5;">1 hour</strong>.</p>
         `;
 
-    await sendMail({
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
       subject: "Reset Your Skillify Password",
       html: emailWrapper(content),
-    });
-    console.log("Password reset email sent to:", email);
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Password reset email sent:", info.messageId);
     return true;
   } catch (error) {
     console.error("Password reset email error:", error.message);
@@ -257,12 +261,15 @@ const sendDeleteAccountOtpEmail = async (email, token, name) => {
               <p style="margin: 18px 0 0; color: #9CA3AF; font-size: 12px; text-align: center;">This deletion link expires in <strong style="color: #dc2626;">15 minutes</strong>.</p>
         `;
 
-    await sendMail({
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
       subject: "Confirm Your Skillify Account Deletion",
       html: emailWrapper(content),
-    });
-    console.log("Delete account token email sent to:", email);
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Delete account token email sent:", info.messageId);
     return true;
   } catch (error) {
     console.error("Delete account token email error:", error.message);
@@ -293,12 +300,15 @@ const sendAccountDeletedConfirmationEmail = async (email, name) => {
               <p style="margin: 0; color: #6b7280; font-size: 14px; text-align: center;">We're sorry to see you go! If you ever want to return, you can always <a href="${process.env.FRONTEND_URL}/signup" style="color: #2563EB; text-decoration: none; font-weight: 600;">create a new account</a>.</p>
         `;
 
-    await sendMail({
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
       subject: "Account Successfully Deleted - Skillify",
       html: emailWrapper(content),
-    });
-    console.log("Account deleted confirmation email sent to:", email);
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Account deleted confirmation email sent:", info.messageId);
     return true;
   } catch (error) {
     console.error("Account deleted confirmation email error:", error.message);
