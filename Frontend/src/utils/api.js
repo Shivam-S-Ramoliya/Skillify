@@ -1,7 +1,4 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
-const getToken = () => localStorage.getItem("token");
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const buildQuery = (params = {}) => {
   const query = new URLSearchParams();
@@ -14,18 +11,87 @@ const buildQuery = (params = {}) => {
   return queryString ? `?${queryString}` : "";
 };
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const subscribeTokenRefresh = (cb) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRefreshed = () => {
+  refreshSubscribers.forEach((cb) => cb());
+  refreshSubscribers = [];
+};
+
+const refreshTokens = async () => {
+  if (isRefreshing) {
+    return new Promise((resolve) => {
+      subscribeTokenRefresh(() => {
+        resolve();
+      });
+    });
+  }
+
+  isRefreshing = true;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Refresh token expired");
+    }
+
+    isRefreshing = false;
+    onRefreshed();
+  } catch (error) {
+    isRefreshing = false;
+    refreshSubscribers = [];
+    throw error;
+  }
+};
+
+const customFetch = async (path, options = {}) => {
+  const url = `${API_BASE_URL}${path}`;
+  
+  let response = await fetch(url, {
+    ...options,
+    credentials: "include",
+  });
+
+  // If unauthorized and not already calling refresh or logout, try to refresh
+  if (
+    response.status === 401 &&
+    !path.includes("/api/auth/refresh") &&
+    !path.includes("/api/auth/logout")
+  ) {
+    try {
+      await refreshTokens();
+      // Retry the original request
+      response = await fetch(url, {
+        ...options,
+        credentials: "include",
+      });
+    } catch (refreshError) {
+      // Invalidate frontend auth state
+      window.dispatchEvent(new Event("auth-logout"));
+      throw refreshError;
+    }
+  }
+
+  return response;
+};
+
 const request = async (path, options = {}) => {
-  const { method = "GET", body, token } = options;
+  const { method = "GET", body } = options;
   const headers = {
     "Content-Type": "application/json",
   };
 
-  const authToken = token || getToken();
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await customFetch(path, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -45,15 +111,8 @@ const fileRequest = async (path, file) => {
   const formData = new FormData();
   formData.append(path.includes("picture") ? "profilePicture" : "resume", file);
 
-  const headers = {};
-  const authToken = getToken();
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await customFetch(path, {
     method: "POST",
-    headers,
     body: formData,
   });
 
@@ -90,15 +149,8 @@ const multipartRequest = async (
     formData.append(fileFieldName, file);
   }
 
-  const headers = {};
-  const authToken = getToken();
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await customFetch(path, {
     method: "POST",
-    headers,
     body: formData,
   });
 
@@ -143,6 +195,7 @@ export const api = {
       body: payload,
     }),
   getMe: () => request("/api/auth/me"),
+  logout: () => request("/api/auth/logout", { method: "POST" }),
   updateProfile: (payload) =>
     request("/api/profile/update", { method: "PUT", body: payload }),
   getMyProfile: () => request("/api/profile/me"),

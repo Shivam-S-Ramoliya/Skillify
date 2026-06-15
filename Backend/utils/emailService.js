@@ -1,31 +1,50 @@
-const { Resend } = require("resend");
-
 // ────────────────────────────────────────────────────────────────
-// Resend HTTP API Transport
-// Works on Render free tier (no SMTP ports needed, uses HTTPS)
-// Backup: emailService_Nodemailer.js (Gmail SMTP version)
+// Brevo HTTP API Transport
+// Works on Render free tier (uses HTTPS REST API)
 // ────────────────────────────────────────────────────────────────
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
+const SENDER_NAME = process.env.BREVO_SENDER_NAME;
 
-// On Resend free tier (no custom domain) you MUST send from onboarding@resend.dev
-// To use your own address, add + verify your domain at https://resend.com/domains
-const FROM_EMAIL = "Skillify <onboarding@resend.dev>";
+console.log("✅ Email service: using Brevo HTTP API");
+console.log("   Sender email:", SENDER_EMAIL);
 
-console.log("✅ Email service: using Resend HTTP API");
-console.log("   From address:", FROM_EMAIL);
-
-// Send email via Resend
+// Send email via Brevo
 const sendMail = async ({ to, subject, html }) => {
-  const { data, error } = await resend.emails.send({
-    from: FROM_EMAIL,
-    to: Array.isArray(to) ? to : [to],
-    subject,
-    html,
+  if (!BREVO_API_KEY) {
+    throw new Error("BREVO_API_KEY is not defined in environment variables");
+  }
+
+  const recipients = (Array.isArray(to) ? to : [to]).map((email) => ({ email }));
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": BREVO_API_KEY,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: {
+        name: SENDER_NAME,
+        email: SENDER_EMAIL,
+      },
+      to: recipients,
+      subject,
+      htmlContent: html,
+    }),
   });
-  if (error) throw new Error(error.message || "Resend API error");
-  console.log("Email sent via Resend:", data?.id);
-  return data;
+
+  const responseData = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    console.error("Brevo API error response:", responseData);
+    throw new Error(responseData.message || "Failed to send email via Brevo");
+  }
+
+  console.log("Email sent via Brevo. Message ID:", responseData.messageId);
+  return responseData;
 };
 
 // ────────────────────────────────────────────────────────────────

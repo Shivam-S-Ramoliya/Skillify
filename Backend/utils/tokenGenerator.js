@@ -1,7 +1,7 @@
 const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 
-const getJwtSecret = () => process.env.JWT_SECRET || "your_jwt_secret_key";
+const getJwtSecret = () => process.env.JWT_SECRET;
 
 const generateActionToken = (payload, expiresIn) => {
   return jwt.sign(payload, getJwtSecret(), { expiresIn });
@@ -69,6 +69,24 @@ const getPasswordResetTokenExpiry = () => {
   return new Date(Date.now() + 60 * 60 * 1000);
 };
 
+const getJwtRefreshSecret = () => process.env.JWT_REFRESH_SECRET;
+
+const generateAccessToken = (userId) => {
+  return jwt.sign({ id: userId }, getJwtSecret(), {
+    expiresIn: "15m",
+  });
+};
+
+const generateRefreshToken = (userId) => {
+  return jwt.sign({ id: userId }, getJwtRefreshSecret(), {
+    expiresIn: "7d",
+  });
+};
+
+const verifyRefreshToken = (token) => {
+  return jwt.verify(token, getJwtRefreshSecret());
+};
+
 module.exports = {
   generateVerificationToken,
   getTokenExpiry,
@@ -77,4 +95,7 @@ module.exports = {
   generateAccountDeletionToken,
   verifyVerificationToken,
   verifyAccountDeletionToken,
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
 };

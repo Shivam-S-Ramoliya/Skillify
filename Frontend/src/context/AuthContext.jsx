@@ -16,21 +16,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const setSession = (token, userData) => {
-    if (token) {
-      localStorage.setItem("token", token);
-    }
+  const setSession = (userData) => {
+    localStorage.setItem("isLoggedIn", "true");
     setUser(normalizeUser(userData));
   };
 
   const clearSession = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("isLoggedIn");
     setUser(null);
   };
 
   const refreshUser = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    if (!isLoggedIn) {
       setLoading(false);
       return;
     }
@@ -47,13 +45,22 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    const handleLogoutEvent = () => {
+      clearSession();
+    };
+    window.addEventListener("auth-logout", handleLogoutEvent);
+
     refreshUser();
+
+    return () => {
+      window.removeEventListener("auth-logout", handleLogoutEvent);
+    };
   }, []);
 
   const login = async (payload) => {
     const response = await api.login(payload);
-    if (response.token) {
-      setSession(response.token, response.user);
+    if (response.success) {
+      setSession(response.user);
       try {
         const me = await api.getMe();
         setUser(normalizeUser(me.data));
@@ -71,8 +78,8 @@ export function AuthProvider({ children }) {
 
   const verifyEmail = async (token) => {
     const response = await api.verifyEmail(token);
-    if (response.token) {
-      setSession(response.token, response.user);
+    if (response.success) {
+      setSession(response.user);
       try {
         const me = await api.getMe();
         setUser(normalizeUser(me.data));
@@ -85,8 +92,8 @@ export function AuthProvider({ children }) {
 
   const checkVerification = async (email) => {
     const response = await api.checkVerification(email);
-    if (response.token) {
-      setSession(response.token, response.user);
+    if (response.success) {
+      setSession(response.user);
       try {
         const me = await api.getMe();
         setUser(normalizeUser(me.data));
@@ -107,8 +114,8 @@ export function AuthProvider({ children }) {
 
   const resetPassword = async (payload) => {
     const response = await api.resetPassword(payload);
-    if (response.token) {
-      setSession(response.token, response.user);
+    if (response.success) {
+      setSession(response.user);
       try {
         const me = await api.getMe();
         setUser(normalizeUser(me.data));
@@ -119,8 +126,14 @@ export function AuthProvider({ children }) {
     return response;
   };
 
-  const logout = () => {
-    clearSession();
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error("Failed calling logout API:", error);
+    } finally {
+      clearSession();
+    }
   };
 
   const updateUser = (userData) => {

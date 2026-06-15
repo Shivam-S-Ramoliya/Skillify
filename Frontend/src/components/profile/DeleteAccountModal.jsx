@@ -1,4 +1,4 @@
-﻿/* eslint-disable react/prop-types, no-negated-condition */
+/* eslint-disable react/prop-types, no-negated-condition */
 import { useEffect, useState } from "react";
 import { api } from "../../utils/api";
 import { useToast } from "../../context/ToastContext";
@@ -140,7 +140,7 @@ export default function DeleteAccountModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="btn-secondary flex-1 py-3"
+                className="btn-secondary w-1/3 py-3"
               >
                 Cancel
               </button>
@@ -148,7 +148,7 @@ export default function DeleteAccountModal({ isOpen, onClose }) {
                 type="button"
                 onClick={handleSendLink}
                 disabled={loading}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-linear-to-r from-red-600 to-rose-600 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:transform-none"
+                className="flex-1 py-3 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-red-600 to-rose-600 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:transform-none"
               >
                 {loading ? "Sending..." : "Send Confirmation Link"}
               </button>

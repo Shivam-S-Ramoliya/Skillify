@@ -267,7 +267,7 @@ exports.getUserProfile = async (req, res) => {
       try {
         const decoded = jwt.verify(
           token,
-          process.env.JWT_SECRET || "your_jwt_secret_key",
+          process.env.JWT_SECRET,
         );
         requesterId = decoded.id;
       } catch (error) {
@@ -485,7 +485,7 @@ exports.discoverProfiles = async (req, res) => {
       try {
         const decoded = jwt.verify(
           token,
-          process.env.JWT_SECRET || "your_jwt_secret_key",
+          process.env.JWT_SECRET,
         );
         if (decoded?.id) {
           query._id = { $ne: decoded.id };

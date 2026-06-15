@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const RefreshToken = require("../models/RefreshToken");
 const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 const {
@@ -11,12 +12,50 @@ const {
   generatePasswordResetToken,
   getPasswordResetTokenExpiry,
   verifyVerificationToken,
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
 } = require("../utils/tokenGenerator");
 
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || "your_jwt_secret_key", {
-    expiresIn: "30d",
+// Send token response with HttpOnly cookies and server-side storage
+const sendTokenResponse = async (user, statusCode, res) => {
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  // Save/track refresh token on the server side
+  await RefreshToken.create({
+    user: user._id,
+    token: refreshToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+  });
+
+  const isProd = process.env.NODE_ENV === "production";
+
+  // Access Token Cookie
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "Lax",
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+
+  // Refresh Token Cookie
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "Lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  res.status(statusCode).json({
+    success: true,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      isVerified: user.isVerified,
+      profileComplete: user.profileComplete,
+    },
   });
 };
 
@@ -69,6 +108,8 @@ exports.signup = async (req, res) => {
       email,
       password,
       location,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpire: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     });
 
     // Send verification email
@@ -156,20 +197,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate token
-    const token = generateToken(user._id);
-
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        profileComplete: user.profileComplete,
-      },
-    });
+    // Set cookies and return user response
+    await sendTokenResponse(user, 200, res);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -240,6 +269,8 @@ exports.verifyEmail = async (req, res) => {
 
     // Update user
     user.isVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpire = null;
     await user.save();
 
     // Send welcome email
@@ -249,20 +280,8 @@ exports.verifyEmail = async (req, res) => {
       console.error("Welcome email sending failed:", emailError);
     }
 
-    // Generate token for auto login
-    const authToken = generateToken(user._id);
-
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully",
-      token: authToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        profileComplete: user.profileComplete,
-      },
-    });
+    // Set cookies and return user response
+    await sendTokenResponse(user, 200, res);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -305,6 +324,11 @@ exports.resendVerification = async (req, res) => {
     const verificationToken = generateVerificationToken({
       email: user.email,
     });
+
+    // Save to user document
+    user.emailVerificationToken = verificationToken;
+    user.emailVerificationExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await user.save();
 
     // Send verification email
     try {
@@ -360,20 +384,8 @@ exports.checkVerification = async (req, res) => {
       });
     }
 
-    // User is verified - generate token for auto login
-    const authToken = generateToken(user._id);
-
-    res.status(200).json({
-      success: true,
-      message: "Email is verified",
-      token: authToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        profileComplete: user.profileComplete,
-      },
-    });
+    // Set cookies and return user response
+    await sendTokenResponse(user, 200, res);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -483,23 +495,163 @@ exports.resetPassword = async (req, res) => {
     user.passwordResetExpire = null;
     await user.save();
 
-    const authToken = generateToken(user._id);
-
-    res.status(200).json({
-      success: true,
-      message: "Password reset successfully",
-      token: authToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        profileComplete: user.profileComplete,
-      },
-    });
+    // Set cookies and return user response
+    await sendTokenResponse(user, 200, res);
   } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message || "Server error while resetting password",
+    });
+  }
+};
+
+// @desc    Log user out / clear cookies & invalidate token
+// @route   POST /api/auth/logout
+// @access  Public
+exports.logout = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (refreshToken) {
+      // Invalidate refresh token on server-side
+      await RefreshToken.deleteOne({ token: refreshToken });
+    }
+
+    // Clear cookies
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error during logout",
+    });
+  }
+};
+
+// @desc    Refresh Access Token using Refresh Token
+// @route   POST /api/auth/refresh
+// @access  Public
+exports.refresh = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token not found",
+      });
+    }
+
+    // Verify token exists on the server side
+    const dbToken = await RefreshToken.findOne({ token: refreshToken });
+    if (!dbToken) {
+      res.clearCookie("accessToken", {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+
+    // Verify expiration of the stored token
+    if (dbToken.expiresAt < new Date()) {
+      await RefreshToken.deleteOne({ _id: dbToken._id });
+      res.clearCookie("accessToken", {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token has expired",
+      });
+    }
+
+    // Verify JWT signature
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (err) {
+      // Signature is invalid
+      await RefreshToken.deleteOne({ _id: dbToken._id });
+      res.clearCookie("accessToken", {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token signature",
+      });
+    }
+
+    // Generate new access token
+    const newAccessToken = generateAccessToken(decoded.id);
+
+    // Refresh Token Rotation
+    const newRefreshToken = generateRefreshToken(decoded.id);
+
+    // Update database with the new refresh token
+    dbToken.token = newRefreshToken;
+    dbToken.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Reset expiry
+    await dbToken.save();
+
+    const isProd = process.env.NODE_ENV === "production";
+
+    // Set cookies
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "Lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error during token refresh",
     });
   }
 };
