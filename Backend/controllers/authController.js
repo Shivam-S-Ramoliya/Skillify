@@ -35,7 +35,7 @@ const sendTokenResponse = async (user, statusCode, res) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: "Lax",
+    sameSite: isProd ? "none" : "lax",
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 
@@ -43,7 +43,7 @@ const sendTokenResponse = async (user, statusCode, res) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: "Lax",
+    sameSite: isProd ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
@@ -518,15 +518,16 @@ exports.logout = async (req, res) => {
     }
 
     // Clear cookies
+    const isProd = process.env.NODE_ENV === "production";
     res.clearCookie("accessToken", {
       httpOnly: true,
-      sameSite: "Lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: isProd ? "none" : "lax",
+      secure: isProd,
     });
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      sameSite: "Lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: isProd ? "none" : "lax",
+      secure: isProd,
     });
 
     res.status(200).json({
@@ -558,15 +559,16 @@ exports.refresh = async (req, res) => {
     // Verify token exists on the server side
     const dbToken = await RefreshToken.findOne({ token: refreshToken });
     if (!dbToken) {
+      const isProd = process.env.NODE_ENV === "production";
       res.clearCookie("accessToken", {
         httpOnly: true,
-        sameSite: "Lax",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
       });
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "Lax",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
       });
       return res.status(401).json({
         success: false,
@@ -577,15 +579,16 @@ exports.refresh = async (req, res) => {
     // Verify expiration of the stored token
     if (dbToken.expiresAt < new Date()) {
       await RefreshToken.deleteOne({ _id: dbToken._id });
+      const isProd = process.env.NODE_ENV === "production";
       res.clearCookie("accessToken", {
         httpOnly: true,
-        sameSite: "Lax",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
       });
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "Lax",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
       });
       return res.status(401).json({
         success: false,
@@ -600,15 +603,16 @@ exports.refresh = async (req, res) => {
     } catch (err) {
       // Signature is invalid
       await RefreshToken.deleteOne({ _id: dbToken._id });
+      const isProd = process.env.NODE_ENV === "production";
       res.clearCookie("accessToken", {
         httpOnly: true,
-        sameSite: "Lax",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
       });
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "Lax",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
       });
       return res.status(401).json({
         success: false,
@@ -633,14 +637,14 @@ exports.refresh = async (req, res) => {
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: "Lax",
+      sameSite: isProd ? "none" : "lax",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: "Lax",
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
