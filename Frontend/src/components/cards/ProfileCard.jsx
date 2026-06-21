@@ -2,10 +2,9 @@ import { Link } from "react-router-dom";
 
 export default function ProfileCard({ user }) {
   return (
-    <article className="group glass-card flex h-full flex-col overflow-hidden hover:-translate-y-1 transition-all duration-200">
+    <article className="group surface-card-hover flex h-full flex-col overflow-hidden">
       <div
-        className="h-24 relative overflow-hidden"
-        style={{ backgroundColor: "var(--color-primary-500)" }}
+        className="h-24 relative overflow-hidden bg-primary opacity-90"
       ></div>
 
       <div className="-mt-10 px-6 pb-6 flex flex-col flex-grow relative z-10">
@@ -14,27 +13,29 @@ export default function ProfileCard({ user }) {
             <img
               src={user.profilePicture}
               alt={user.name}
-              className="h-20 w-20 rounded-xl border-4 border-white object-cover shadow-sm bg-white group-hover:scale-105 transition-transform duration-200 relative z-20"
+              className="h-20 w-20 rounded-2xl border-2 border-surface object-cover shadow-md bg-neutral group-hover:scale-105 transition-transform duration-200 relative z-20"
             />
           ) : (
             <div
-              className="flex h-20 w-20 items-center justify-center rounded-xl border-4 border-white text-2xl font-bold text-white shadow-sm relative z-20 group-hover:scale-105 transition-transform duration-200"
-              style={{ backgroundColor: "var(--color-primary-500)" }}
+              className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-surface text-2xl font-bold text-white shadow-md relative z-20 bg-tertiary group-hover:scale-105 transition-transform duration-200"
             >
               {user.name?.charAt(0)?.toUpperCase()}
             </div>
           )}
           <div className="pb-1">
             <h3
-              className="line-clamp-1 text-lg font-bold transition-colors"
-              style={{ color: "var(--color-neutral-900)" }}
+              className="line-clamp-1 text-lg font-bold text-primary transition-colors"
             >
               {user.name}
             </h3>
+            {user.username && (
+              <p className="line-clamp-1 text-[11px] font-bold text-secondary/70">
+                @{user.username}
+              </p>
+            )}
             {(user.currentRole || user.company) && (
               <p
-                className="line-clamp-1 text-xs font-semibold"
-                style={{ color: "var(--color-primary-600)" }}
+                className="line-clamp-1 text-xs font-bold text-tertiary mt-0.5"
               >
                 {[user.currentRole, user.company].filter(Boolean).join(" at ")}
               </p>
@@ -44,12 +45,10 @@ export default function ProfileCard({ user }) {
 
         {user.location && (
           <p
-            className="mt-4 text-sm font-medium flex items-center gap-1.5"
-            style={{ color: "var(--color-neutral-500)" }}
+            className="mt-4 text-sm font-semibold flex items-center gap-1.5 text-secondary"
           >
             <svg
-              className="w-4 h-4"
-              style={{ color: "var(--color-neutral-400)" }}
+              className="w-4 h-4 text-secondary/70"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -73,8 +72,7 @@ export default function ProfileCard({ user }) {
 
         {user.bio && (
           <p
-            className="mt-3 line-clamp-2 text-sm font-medium leading-relaxed flex-grow"
-            style={{ color: "var(--color-neutral-600)" }}
+            className="mt-3 line-clamp-2 text-sm font-medium leading-relaxed text-secondary flex-grow"
           >
             {user.bio}
           </p>
@@ -82,30 +80,19 @@ export default function ProfileCard({ user }) {
 
         {user.skills?.length > 0 && (
           <div
-            className="mt-4 pt-4 flex flex-wrap gap-2"
-            style={{ borderTop: "1px solid var(--color-neutral-100)" }}
+            className="mt-4 pt-4 flex flex-wrap gap-2 border-t border-secondary/15"
           >
             {user.skills.slice(0, 3).map((skill, idx) => (
               <span
                 key={idx}
-                className="rounded-lg px-2.5 py-1 text-xs font-semibold"
-                style={{
-                  backgroundColor: "var(--color-primary-50)",
-                  color: "var(--color-primary-700)",
-                  border: "1px solid var(--color-primary-100)",
-                }}
+                className="badge-primary !py-1 !px-2.5 !rounded-[8px] !text-[10px]"
               >
                 {skill}
               </span>
             ))}
             {user.skills.length > 3 && (
               <span
-                className="rounded-lg px-2.5 py-1 text-xs font-semibold"
-                style={{
-                  backgroundColor: "var(--color-neutral-100)",
-                  color: "var(--color-neutral-600)",
-                  border: "1px solid var(--color-neutral-200)",
-                }}
+                className="badge-neutral !py-1 !px-2.5 !rounded-[8px] !text-[10px]"
               >
                 +{user.skills.length - 3}
               </span>
@@ -114,13 +101,8 @@ export default function ProfileCard({ user }) {
         )}
 
         <Link
-          to={`/profile/${user._id}`}
-          className="mt-5 w-full block text-center py-2.5 rounded-xl font-semibold transition-all"
-          style={{
-            backgroundColor: "white",
-            color: "var(--color-primary-600)",
-            border: "1px solid var(--color-neutral-200)",
-          }}
+          to={user.username ? `/profile/${user.username}` : `/profile/${user._id}`}
+          className="mt-5 w-full block text-center btn-secondary !py-2.5 !px-4 !text-sm !rounded-[10px]"
         >
           View Profile
         </Link>

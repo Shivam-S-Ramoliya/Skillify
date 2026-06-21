@@ -53,6 +53,7 @@ const sendTokenResponse = async (user, statusCode, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      username: user.username,
       isVerified: user.isVerified,
       profileComplete: user.profileComplete,
     },
@@ -64,13 +65,34 @@ const sendTokenResponse = async (user, statusCode, res) => {
 // @access  Public
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, location } = req.body;
+    const { name, email, username, password, confirmPassword, location } = req.body;
 
     // Validation
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !username || !password || !confirmPassword) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
+      });
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(username)) {
+      return res.status(400).json({
+        success: false,
+        message: "Username can only contain alphanumeric characters and underscores, and no spaces",
+      });
+    }
+
+    // Reserved usernames check
+    const RESERVED_USERNAMES = [
+      "login", "signup", "dashboard", "discover", "profile", "publish-job", "applications",
+      "forgot-password", "reset-password", "verify-email", "confirm-delete", "complete-profile",
+      "admin", "api", "help", "support", "settings", "null", "undefined"
+    ];
+    if (RESERVED_USERNAMES.includes(username.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        message: "This username is reserved and cannot be used",
       });
     }
 
@@ -97,19 +119,32 @@ exports.signup = async (req, res) => {
       });
     }
 
+    // Check if username already exists
+    const existingUsername = await User.findOne({ username: username.toLowerCase() });
+    if (existingUsername) {
+      return res.status(400).json({
+        success: false,
+        message: "Username is already taken",
+      });
+    }
+
     // Generate verification token
     const verificationToken = generateVerificationToken({
       email,
     });
 
+    const isDev = process.env.NODE_ENV === "development";
+
     // Create user
     const user = await User.create({
       name,
       email,
+      username,
       password,
       location,
-      emailVerificationToken: verificationToken,
-      emailVerificationExpire: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      isVerified: isDev ? true : false,
+      emailVerificationToken: isDev ? null : verificationToken,
+      emailVerificationExpire: isDev ? null : new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     });
 
     // Send verification email
@@ -129,6 +164,7 @@ exports.signup = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username,
         isVerified: user.isVerified,
         profileComplete: user.profileComplete,
       },

@@ -35,7 +35,7 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token) {
-      toast.error("Missing reset token. Please request a new reset link.");
+      toast.error("Invalid or expired reset link. Please request a new one.");
       return;
     }
 
@@ -48,14 +48,14 @@ export default function ResetPassword() {
         confirmPassword: formData.confirmPassword,
       });
 
-      toast.success(response.message || "Password reset successfully");
+      toast.success(response.message || "Password has been reset! Redirecting to login...");
       if (response.user?.profileComplete) {
         navigate("/dashboard");
       } else {
         navigate("/complete-profile");
       }
     } catch (err) {
-      toast.error(err.message || "Failed to reset password");
+      toast.error(err.message || "Failed to reset password. The link may have expired.");
     } finally {
       setLoading(false);
     }
@@ -63,21 +63,13 @@ export default function ResetPassword() {
 
   return (
     <div className="page-wrap relative flex items-center justify-center min-h-[calc(100vh-160px)] py-12">
-      <div className="absolute top-0 left-0 h-96 w-96 rounded-full bg-primary-200 blur-3xl opacity-35 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-accent-200 blur-3xl opacity-30 pointer-events-none" />
-
       <div className="relative z-10 w-full max-w-2xl px-4">
-        <div className="overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl shadow-indigo-500/10">
+        <div className="overflow-hidden rounded-3xl border border-secondary/15 bg-surface shadow-sm p-3">
           <div
-            className="px-8 py-10 text-white"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 45%, var(--color-accent-600) 100%)",
-            }}
+            className="px-8 py-10 text-white rounded-2xl bg-primary"
           >
             <span
-              className="inline-flex rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
-              style={{ backgroundColor: "rgba(255,255,255,0.16)" }}
+              className="inline-flex rounded-xl px-4 py-1.5 text-xs font-bold uppercase tracking-widest bg-white/20 border border-white/30"
             >
               New Password
             </span>
@@ -91,13 +83,12 @@ export default function ResetPassword() {
             </p>
           </div>
 
-          <div className="p-8 sm:p-10">
+          <div className="p-8 sm:p-10 bg-surface">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label
                   htmlFor="reset-password-new"
-                  className="mb-2 block text-sm font-semibold"
-                  style={{ color: "var(--color-neutral-700)" }}
+                  className="mb-2 block text-sm font-bold text-slate-705"
                 >
                   New password
                 </label>
@@ -116,8 +107,7 @@ export default function ResetPassword() {
               <div>
                 <label
                   htmlFor="reset-password-confirm"
-                  className="mb-2 block text-sm font-semibold"
-                  style={{ color: "var(--color-neutral-700)" }}
+                  className="mb-2 block text-sm font-bold text-slate-705"
                 >
                   Confirm password
                 </label>
@@ -133,7 +123,7 @@ export default function ResetPassword() {
                 />
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+              <div className="rounded-2xl surface-sunken px-4 py-4 text-sm leading-6 text-secondary font-semibold">
                 Use 8 or more characters for a stronger password.
               </div>
 
@@ -149,8 +139,7 @@ export default function ResetPassword() {
             <div className="mt-8 text-center">
               <Link
                 to="/forgot-password"
-                className="text-sm font-semibold transition-colors"
-                style={{ color: "var(--color-primary-600)" }}
+                className="text-sm font-bold text-tertiary hover:underline transition-colors"
               >
                 Request a new reset link
               </Link>

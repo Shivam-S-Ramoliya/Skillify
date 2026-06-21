@@ -227,7 +227,7 @@ exports.discoverJobs = async (req, res) => {
         .limit(limit)
         .populate(
           "postedBy",
-          "name profilePicture location company currentRole",
+          "name username profilePicture location company currentRole",
         )
         .lean(),
       Job.countDocuments(query),
@@ -363,10 +363,10 @@ exports.getSentApplications = async (req, res) => {
           "jobName skillsRequired experienceRequired compensationType salary durationFrom durationTo postedBy",
         populate: {
           path: "postedBy",
-          select: "name profilePicture location company currentRole",
+          select: "name username profilePicture location company currentRole",
         },
       })
-      .populate("employer", "name profilePicture location company currentRole")
+      .populate("employer", "name username profilePicture location company currentRole")
       .lean();
 
     return res.status(200).json({
@@ -403,7 +403,7 @@ exports.getReceivedApplications = async (req, res) => {
       })
       .populate(
         "applicant",
-        "name profilePicture location skills experience yearsOfExperience githubUrl linkedinUrl currentRole company",
+        "name username profilePicture location skills experience yearsOfExperience githubUrl linkedinUrl currentRole company",
       )
       .lean();
 
@@ -493,7 +493,7 @@ exports.getMyPostedJobs = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate(
         "postedBy",
-        "name profilePicture location company currentRole",
+        "name username profilePicture location company currentRole",
       )
       .lean();
 

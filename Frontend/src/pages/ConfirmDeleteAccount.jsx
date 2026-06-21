@@ -28,7 +28,7 @@ export default function ConfirmDeleteAccount() {
       setLoading(false);
       setStatus("missing");
       toast.error(
-        "Missing deletion token. Please request a new deletion link.",
+        "Invalid or expired deletion link. Please request a new one from your profile.",
       );
       return;
     }
@@ -40,7 +40,7 @@ export default function ConfirmDeleteAccount() {
         const response = await api.deleteAccount(token);
         if (cancelled) return;
         setStatus("success");
-        toast.success(response.message || "Account deleted successfully");
+        toast.success(response.message || "Your account has been deleted. We're sorry to see you go.");
         setTimeout(() => {
           logout();
           navigate("/", { replace: true });
@@ -48,7 +48,7 @@ export default function ConfirmDeleteAccount() {
       } catch (err) {
         if (cancelled) return;
         setStatus("error");
-        toast.error(err.message || "Failed to confirm account deletion");
+        toast.error(err.message || "Could not delete your account. The link may have expired.");
         setLoading(false);
       }
     };
@@ -66,7 +66,7 @@ export default function ConfirmDeleteAccount() {
       <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-accent-100 blur-3xl opacity-35 pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-2xl px-4">
-        <div className="overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl shadow-red-500/10">
+        <div className="overflow-hidden rounded-3xl border border-secondary/15 bg-surface shadow-2xl shadow-red-500/10">
           <div
             className="px-8 py-10 text-white"
             style={{

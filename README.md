@@ -15,15 +15,18 @@ The platform is built around profile trust, verified accounts, and transparent a
 
 ## 🧩 Core capabilities
 
-- 🔐 Secure auth: signup, login, email verification, password reset
-- 🧾 Guided profile completion with strict required fields
+- 🔐 Secure auth: signup, login (HttpOnly cookies + token rotation), email verification, password reset
+- 👥 Social integration: follow, unfollow, and remove-follower systems with "Follows You" badges
+- 🧾 Guided profile completion with strict validation & completion status
 - 👁️ Profile visibility controls (`public` / `private`)
 - 📢 Job publishing with validation, dates, compensation, and optional job document upload
 - 🔎 Job discovery with search and pagination
 - 🔁 Application lifecycle: `pending`, `accepted`, `rejected`, `withdrawn`
 - 📬 Sent and received application dashboards
 - 🗑️ Account deletion flow via secure email confirmation link
-- 🔔 Global toast notifications for success, warnings, and errors
+- 💀 Skeletal loading states on profile pages for a premium, modern feel
+- 📱 Mobile-optimized UI/UX across all pages with a slick drawer navigation
+- 🔔 Rich global notifications (toast alerts) for errors, warnings, success, and info across all flows
 
 ## ⚠️ Important business rules
 
@@ -88,6 +91,8 @@ Base URL (local): `http://localhost:5000/api`
 - `POST /check-verification`
 - `POST /forgot-password`
 - `POST /reset-password`
+- `POST /refresh`
+- `POST /logout`
 - `GET /me` (protected)
 
 ### Profile (`/profile`)
@@ -102,6 +107,9 @@ Base URL (local): `http://localhost:5000/api`
 - `POST /upload-resume` (protected)
 - `POST /request-delete` (protected)
 - `DELETE /delete` (protected)
+- `POST /:userIdOrUsername/follow` (protected)
+- `POST /:userIdOrUsername/unfollow` (protected)
+- `POST /:userIdOrUsername/remove-follower` (protected)
 
 ### Jobs (`/jobs`)
 

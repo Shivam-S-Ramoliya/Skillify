@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Job = require("../models/Job");
 const JobApplication = require("../models/JobApplication");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const {
   uploadToCloudinary,
   deleteFromCloudinary,
@@ -148,6 +149,48 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
+    // Validate and update username if provided
+    if (Object.prototype.hasOwnProperty.call(req.body, "username") && req.body.username !== user.username) {
+      const username = String(req.body.username).trim();
+      
+      if (!username) {
+        return res.status(400).json({
+          success: false,
+          message: "Username cannot be empty",
+        });
+      }
+
+      const usernameRegex = /^[a-zA-Z0-9_]+$/;
+      if (!usernameRegex.test(username)) {
+        return res.status(400).json({
+          success: false,
+          message: "Username can only contain alphanumeric characters and underscores, and no spaces",
+        });
+      }
+
+      const RESERVED_USERNAMES = [
+        "login", "signup", "dashboard", "discover", "profile", "publish-job", "applications",
+        "forgot-password", "reset-password", "verify-email", "confirm-delete", "complete-profile",
+        "admin", "api", "help", "support", "settings", "null", "undefined"
+      ];
+      if (RESERVED_USERNAMES.includes(username.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: "This username is reserved and cannot be used",
+        });
+      }
+
+      const existingUsername = await User.findOne({ username: username.toLowerCase() });
+      if (existingUsername && existingUsername._id.toString() !== user._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "Username is already taken",
+        });
+      }
+
+      user.username = username.toLowerCase();
+    }
+
     // Update fields if provided (allow empty strings/arrays to clear values)
     const updatableFields = [
       "name",
@@ -207,6 +250,11 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
+    await user.populate([
+      { path: "followers", select: "name username profilePicture currentRole location" },
+      { path: "following", select: "name username profilePicture currentRole location" }
+    ]);
+
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
@@ -215,6 +263,7 @@ exports.updateProfile = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username,
         bio: user.bio,
         location: user.location,
         profilePicture: user.profilePicture,
@@ -231,6 +280,8 @@ exports.updateProfile = async (req, res) => {
         portfolioUrl: user.portfolioUrl,
         profileVisibility: user.profileVisibility,
         profileComplete: user.profileComplete,
+        followers: user.followers,
+        following: user.following,
       },
     });
   } catch (error) {
@@ -248,9 +299,17 @@ exports.getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId).select(
-      "-password -emailVerificationToken -emailVerificationExpire",
-    );
+    let query = {};
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      query = { $or: [{ _id: userId }, { username: userId.toLowerCase() }] };
+    } else {
+      query = { username: userId.toLowerCase() };
+    }
+
+    const user = await User.findOne(query)
+      .select("-password -emailVerificationToken -emailVerificationExpire")
+      .populate("followers", "name username profilePicture currentRole location")
+      .populate("following", "name username profilePicture currentRole location");
 
     if (!user) {
       return res.status(404).json({
@@ -275,7 +334,7 @@ exports.getUserProfile = async (req, res) => {
       }
     }
 
-    if (user.profileVisibility === "private" && requesterId !== userId) {
+    if (user.profileVisibility === "private" && String(requesterId) !== String(user._id)) {
       return res.status(403).json({
         success: false,
         message: "This profile is private",
@@ -299,9 +358,10 @@ exports.getUserProfile = async (req, res) => {
 // @access  Private
 exports.getMyProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select(
-      "-password -emailVerificationToken -emailVerificationExpire",
-    );
+    const user = await User.findById(req.user.id)
+      .select("-password -emailVerificationToken -emailVerificationExpire")
+      .populate("followers", "name username profilePicture currentRole location")
+      .populate("following", "name username profilePicture currentRole location");
 
     if (!user) {
       return res.status(404).json({
@@ -470,7 +530,7 @@ exports.updateProfileVisibility = async (req, res) => {
 // @access  Public
 exports.discoverProfiles = async (req, res) => {
   try {
-    const { role, skill, page = 1, limit = 10 } = req.query;
+    const { role, skill, search, page = 1, limit = 10 } = req.query;
 
     const query = {
       profileVisibility: "public",
@@ -478,10 +538,18 @@ exports.discoverProfiles = async (req, res) => {
       isVerified: true,
     };
 
-    // Optionally exclude current user if token is provided
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
+    // Optionally exclude current user if token is provided in cookies or headers
+    let token = null;
+    if (req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
+    } else {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.split(" ")[1];
+      }
+    }
+
+    if (token) {
       try {
         const decoded = jwt.verify(
           token,
@@ -502,6 +570,20 @@ exports.discoverProfiles = async (req, res) => {
         const regexFilter = { $regex: trimmedSkill, $options: "i" };
 
         query.skills = regexFilter;
+      }
+    }
+
+    if (search) {
+      const trimmedSearch = search.trim();
+      if (trimmedSearch) {
+        const regex = { $regex: trimmedSearch, $options: "i" };
+        query.$or = [
+          { name: regex },
+          { username: regex },
+          { currentRole: regex },
+          { skills: regex },
+          { location: regex }
+        ];
       }
     }
 
@@ -654,6 +736,151 @@ exports.confirmAccountDeletion = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Server error while deleting account",
+    });
+  }
+};
+
+// @desc    Follow a user
+// @route   POST /api/profile/:userIdOrUsername/follow
+// @access  Private
+exports.followUser = async (req, res) => {
+  try {
+    const { userIdOrUsername } = req.params;
+    const currentUserId = req.user.id;
+
+    // Find the user to follow
+    let query = {};
+    if (mongoose.Types.ObjectId.isValid(userIdOrUsername)) {
+      query = { $or: [{ _id: userIdOrUsername }, { username: userIdOrUsername.toLowerCase() }] };
+    } else {
+      query = { username: userIdOrUsername.toLowerCase() };
+    }
+
+    const userToFollow = await User.findOne(query);
+    if (!userToFollow) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (userToFollow._id.toString() === currentUserId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot follow yourself",
+      });
+    }
+
+    // Add to current user's following list
+    await User.findByIdAndUpdate(currentUserId, {
+      $addToSet: { following: userToFollow._id },
+    });
+
+    // Add to target user's followers list
+    await User.findByIdAndUpdate(userToFollow._id, {
+      $addToSet: { followers: currentUserId },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully followed ${userToFollow.name}`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error while following user",
+    });
+  }
+};
+
+// @desc    Unfollow a user
+// @route   POST /api/profile/:userIdOrUsername/unfollow
+// @access  Private
+exports.unfollowUser = async (req, res) => {
+  try {
+    const { userIdOrUsername } = req.params;
+    const currentUserId = req.user.id;
+
+    // Find the user to unfollow
+    let query = {};
+    if (mongoose.Types.ObjectId.isValid(userIdOrUsername)) {
+      query = { $or: [{ _id: userIdOrUsername }, { username: userIdOrUsername.toLowerCase() }] };
+    } else {
+      query = { username: userIdOrUsername.toLowerCase() };
+    }
+
+    const userToUnfollow = await User.findOne(query);
+    if (!userToUnfollow) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Remove from current user's following list
+    await User.findByIdAndUpdate(currentUserId, {
+      $pull: { following: userToUnfollow._id },
+    });
+
+    // Remove from target user's followers list
+    await User.findByIdAndUpdate(userToUnfollow._id, {
+      $pull: { followers: currentUserId },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully unfollowed ${userToUnfollow.name}`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error while unfollowing user",
+    });
+  }
+};
+
+// @desc    Remove a follower (force a user to unfollow us)
+// @route   POST /api/profile/:userIdOrUsername/remove-follower
+// @access  Private
+exports.removeFollower = async (req, res) => {
+  try {
+    const { userIdOrUsername } = req.params;
+    const currentUserId = req.user.id;
+
+    // Find the user to remove from followers
+    let query = {};
+    if (mongoose.Types.ObjectId.isValid(userIdOrUsername)) {
+      query = { $or: [{ _id: userIdOrUsername }, { username: userIdOrUsername.toLowerCase() }] };
+    } else {
+      query = { username: userIdOrUsername.toLowerCase() };
+    }
+
+    const followerUser = await User.findOne(query);
+    if (!followerUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Remove followerUser._id from current user's followers list
+    await User.findByIdAndUpdate(currentUserId, {
+      $pull: { followers: followerUser._id },
+    });
+
+    // Remove currentUserId from followerUser's following list
+    await User.findByIdAndUpdate(followerUser._id, {
+      $pull: { following: currentUserId },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully removed ${followerUser.name} from your followers`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error while removing follower",
     });
   }
 };

@@ -3,48 +3,20 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* ========================================
-     SKILLIFY DESIGN SYSTEM - Color Palette
-     Premium SaaS-level UI Colors
-     ======================================== */
+  /* Zapier Design System Colors */
+  --color-primary: #1E1E1E;
+  --color-secondary: #716F6F;
+  --color-tertiary: #FF4F00;
+  --color-neutral: #FFF4ED;
+  --color-surface: #FFFFFF;
+  --color-on-primary: #FFFFFF;
 
-  /* Primary (Indigo/Blue) - Main brand color */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
+  /* Accent mapping for UI (Indigo -> Orange) */
+  --color-primary-500: #FF4F00;
+  --color-primary-600: #e04500;
+  --color-primary-700: #cc3f00;
 
-  /* Accent (Purple/Pink burst for highlights) */
-  --color-accent-50: #faf5ff;
-  --color-accent-100: #f3e8ff;
-  --color-accent-200: #e9d5ff;
-  --color-accent-300: #d8b4fe;
-  --color-accent-400: #c084fc;
-  --color-accent-500: #a855f7;
-  --color-accent-600: #9333ea;
-  --color-accent-700: #7e22ce;
-  --color-accent-800: #6b21a8;
-  --color-accent-900: #581c87;
-
-  /* Neutral (Slate Gray) - Text, backgrounds, borders */
-  --color-neutral-50: #f8fafc;
-  --color-neutral-100: #f1f5f9;
-  --color-neutral-200: #e2e8f0;
-  --color-neutral-300: #cbd5e1;
-  --color-neutral-400: #94a3b8;
-  --color-neutral-500: #64748b;
-  --color-neutral-600: #475569;
-  --color-neutral-700: #334155;
-  --color-neutral-800: #1e293b;
-  --color-neutral-900: #0f172a;
-
-  /* Semantic Colors */
+  /* Keep other semantic alert colors */
   --color-warning-50: #fffbeb;
   --color-warning-500: #f59e0b;
   --color-warning-700: #b45309;
@@ -57,7 +29,7 @@
   --color-success-500: #22c55e;
   --color-success-700: #15803d;
 
-  /* Tailwind CSS Animations (Used for basic native CSS movement) */
+  /* Animations */
   --animate-blob: blob 7s infinite;
   --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-float: float 6s ease-in-out infinite;
@@ -81,62 +53,133 @@
   body,
   #root {
     @apply h-full min-h-screen antialiased;
-    color: var(--color-neutral-800);
+    color: var(--color-primary);
     scroll-behavior: smooth;
   }
 
   ::selection {
-    background-color: color-mix(in srgb, var(--color-primary-500) 30%, transparent);
-    color: var(--color-primary-900);
+    background-color: rgba(255, 79, 0, 0.2);
+    color: var(--color-primary);
   }
 
   body {
     margin: 0;
-    /* Beautiful purple-blue gradient fixed to the viewport */
-    background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-accent-100) 50%, var(--color-primary-100) 100%);
-    background-attachment: fixed;
+    /* Warm cream neutral canvas background */
+    background-color: var(--color-neutral) !important;
+    background-image: none !important;
+  }
+
+  .dark {
+    --color-primary: #FAFAFA;
+    --color-secondary: #A1A1AA;
+    --color-neutral: #09090B; /* zinc-950 */
+    --color-surface: #18181B; /* zinc-900 */
+    --color-on-primary: #FAFAFA;
+
+    /* Override slate variables dynamically to invert them for dark mode */
+    --color-slate-50: #09090b;   /* zinc-950 */
+    --color-slate-100: #18181b;  /* zinc-900 */
+    --color-slate-200: #27272a;  /* zinc-800 */
+    --color-slate-300: #3f3f46;  /* zinc-700 */
+    --color-slate-400: #52525b;  /* zinc-600 */
+    --color-slate-500: #71717a;  /* zinc-500 */
+    --color-slate-600: #a1a1aa;  /* zinc-400 */
+    --color-slate-700: #d4d4d8;  /* zinc-300 */
+    --color-slate-800: #e4e4e7;  /* zinc-200 */
+    --color-slate-900: #fafafa;  /* zinc-50 */
+  }
+
+  .dark .bg-primary {
+    background-color: #1A1A1E !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .dark .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .dark .badge-neutral {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #E4E4E7 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
   }
 }
 
 @layer components {
   /* ========================================
-     SURFACE & CARD STYLES
-     Gorgeous Glassmorphism
+     ZAPIER SURFACE & CARD STYLES
      ======================================== */
   .glass-card,
   .surface-card {
-    @apply bg-white/60 backdrop-blur-2xl rounded-2xl transition-all duration-300;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.03), 0 0 1px rgba(0,0,0,0.1);
+    background-color: var(--color-surface);
+    border: 1px solid rgba(113, 111, 111, 0.15);
+    box-shadow: 0 4px 12px -2px rgba(113, 111, 111, 0.05), 0 2px 6px -1px rgba(113, 111, 111, 0.03);
+    border-radius: 16px;
+    transition: all 0.2s ease;
   }
 
   .glass-card-hover,
   .surface-card-hover {
-    @apply bg-white/60 backdrop-blur-2xl rounded-2xl transition-all duration-300 cursor-pointer;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.03), 0 0 1px rgba(0,0,0,0.1);
+    background-color: var(--color-surface);
+    border: 1px solid rgba(113, 111, 111, 0.15);
+    box-shadow: 0 4px 12px -2px rgba(113, 111, 111, 0.05), 0 2px 6px -1px rgba(113, 111, 111, 0.03);
+    border-radius: 16px;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
   }
 
   .glass-card-hover:hover,
   .surface-card-hover:hover {
-    @apply bg-white/80;
-    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0,0,0,0.1);
     transform: translateY(-4px);
-    border-color: var(--color-primary-200);
+    box-shadow: 0 12px 24px -4px rgba(113, 111, 111, 0.12), 0 4px 12px -2px rgba(113, 111, 111, 0.08);
+    border-color: rgba(255, 79, 0, 0.3);
+  }
+
+  .glass-card-hover:active,
+  .surface-card-hover:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px -1px rgba(113, 111, 111, 0.06);
+  }
+
+  /* Simple Flat gray details container */
+  .surface-sunken {
+    background-color: rgba(113, 111, 111, 0.03);
+    border: 1px solid rgba(113, 111, 111, 0.1);
+    border-radius: 16px;
   }
 
   /* ========================================
      TEXT & GRADIENTS
-     Premium Gradients
      ======================================== */
+  .text-display {
+    font-family: var(--font-sans);
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--color-primary);
+  }
+
+  @media (min-width: 768px) {
+    .text-display {
+      font-size: 4.25rem;
+    }
+  }
+
+  .text-h1 {
+    font-family: var(--font-sans);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent inline-block;
-    background-image: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-accent-600) 100%);
+    background-image: linear-gradient(135deg, var(--color-tertiary) 0%, #ff7300 100%);
   }
 
   .text-gradient-premium {
     @apply bg-clip-text text-transparent inline-block font-extrabold;
-    background-image: linear-gradient(to right, var(--color-primary-500), var(--color-accent-500));
+    background-image: linear-gradient(to right, var(--color-tertiary), #ff7300);
   }
 
   /* ========================================
@@ -147,74 +190,80 @@
   }
 
   .page-container {
-    @apply w-[92%] md:w-[80%] lg:w-[70%] max-w-[1600px] mx-auto relative z-10;
+    @apply w-[95%] md:w-[80%] lg:w-[70%] max-w-[1600px] mx-auto relative z-10;
   }
 
   .page-wrap {
-    @apply py-8 md:py-16;
+    @apply py-5 md:py-16;
   }
 
   .section-title {
-    @apply text-3xl md:text-5xl font-extrabold tracking-tight;
-    color: var(--color-neutral-900);
+    @apply text-2xl md:text-5xl font-extrabold tracking-tight;
+    color: var(--color-primary);
   }
 
   .section-subtitle {
     @apply mt-4 text-lg md:text-xl max-w-3xl leading-relaxed;
-    color: var(--color-neutral-600);
+    color: var(--color-secondary);
   }
 
   /* ========================================
      BUTTON STYLES
-     Pill-shaped, gorgeous glows
      ======================================== */
+  /* Solid Primary Orange button */
   .btn-primary {
-    @apply relative inline-flex items-center justify-center px-8 py-3.5 rounded-full text-sm sm:text-base font-bold text-white transition-all duration-300 focus:outline-none overflow-hidden hover:scale-105;
-    background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-accent-600) 100%);
-    box-shadow: 0 4px 14px 0 rgba(147, 51, 234, 0.39);
+    @apply relative inline-flex items-center justify-center px-5 py-3 rounded-[10px] text-sm sm:text-base font-bold text-white transition-all duration-200 focus:outline-none hover:scale-[1.01] active:scale-[0.99] cursor-pointer;
+    background-color: var(--color-tertiary);
+    border: 1px solid var(--color-tertiary);
   }
 
   .btn-primary:hover {
-    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.23);
+    background-color: #ff601a;
+    border-color: #ff601a;
   }
   
   .btn-primary:active {
-    transform: scale(0.98);
+    background-color: #e04500;
+    border-color: #e04500;
   }
 
+  /* Bordered Secondary button */
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-8 py-3.5 rounded-full text-sm sm:text-base font-bold transition-all duration-300 focus:outline-none hover:scale-105;
-    color: var(--color-neutral-800);
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--color-neutral-200);
-    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.05);
+    @apply inline-flex items-center justify-center px-5 py-3 rounded-[10px] text-sm sm:text-base font-bold transition-all duration-200 focus:outline-none hover:scale-[1.01] active:scale-[0.99] cursor-pointer;
+    color: var(--color-primary);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-secondary);
   }
 
   .btn-secondary:hover {
-    background-color: white;
-    border-color: var(--color-neutral-300);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    background-color: rgba(113, 111, 111, 0.05);
+    border-color: var(--color-primary);
   }
 
+  .btn-secondary:active {
+    background-color: rgba(113, 111, 111, 0.1);
+  }
+
+  /* Flat Danger button */
   .btn-danger {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-bold text-white transition-all duration-300 focus:outline-none hover:scale-105;
-    background: linear-gradient(135deg, var(--color-error-600) 0%, var(--color-error-500) 100%);
-    box-shadow: 0 4px 14px 0 rgba(220, 38, 38, 0.39);
+    @apply inline-flex items-center justify-center px-5 py-3 rounded-[10px] text-sm font-bold text-white transition-all duration-200 focus:outline-none hover:scale-[1.01] active:scale-[0.99] cursor-pointer;
+    background-color: var(--color-error-700);
+    border: 1px solid var(--color-error-700);
   }
 
   .btn-danger:hover {
-    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.23);
+    background-color: var(--color-error-500);
   }
 
+  /* Flat Success button */
   .btn-success {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-bold text-white transition-all duration-300 focus:outline-none hover:scale-105;
-    background: linear-gradient(135deg, var(--color-success-700) 0%, var(--color-success-500) 100%);
-    box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.39);
+    @apply inline-flex items-center justify-center px-5 py-3 rounded-[10px] text-sm font-bold text-white transition-all duration-200 focus:outline-none hover:scale-[1.01] active:scale-[0.99] cursor-pointer;
+    background-color: var(--color-success-700);
+    border: 1px solid var(--color-success-700);
   }
 
   .btn-success:hover {
-    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.23);
+    background-color: var(--color-success-500);
   }
 
   .btn-primary:disabled,
@@ -228,85 +277,80 @@
 
   /* ========================================
      INPUT STYLES
-     Clean, minimalist, thick focus rings
      ======================================== */
   .input-base {
-    @apply w-full rounded-2xl px-5 py-3.5 text-base transition-all duration-300 outline-none;
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    border: 2px solid var(--color-neutral-200);
-    color: var(--color-neutral-900);
+    @apply w-full rounded-[10px] px-5 py-3 text-base transition-all duration-200 outline-none border border-slate-300;
+    background-color: var(--color-surface);
+    color: var(--color-primary);
   }
 
   .input-base::placeholder {
-    color: var(--color-neutral-400);
-  }
-
-  .input-base:hover {
-    border-color: var(--color-neutral-300);
+    color: var(--color-secondary);
+    opacity: 0.7;
   }
 
   .input-base:focus {
-    background-color: white;
-    border-color: var(--color-primary-500);
-    box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--color-primary-500) 30%, transparent);
+    border-color: var(--color-tertiary);
+    @apply ring-2 ring-tertiary/20;
   }
 
   /* ========================================
      BADGE/TAG STYLES
      ======================================== */
   .badge-primary {
-    @apply inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors;
-    background-color: var(--color-primary-50);
-    color: var(--color-primary-700);
-    border: 1px solid var(--color-primary-100);
-  }
-  .badge-primary:hover {
-    background-color: var(--color-primary-100);
+    @apply inline-flex items-center px-2.5 py-1 rounded-[8px] text-[11px] font-bold uppercase tracking-wider transition-all;
+    background-color: rgba(255, 79, 0, 0.1);
+    color: var(--color-tertiary);
+    border: 1px solid rgba(255, 79, 0, 0.15);
   }
 
   .badge-accent {
-    @apply inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors;
-    background-color: var(--color-accent-50);
-    color: var(--color-accent-700);
-    border: 1px solid var(--color-accent-100);
+    @apply inline-flex items-center px-2.5 py-1 rounded-[8px] text-[11px] font-bold uppercase tracking-wider transition-all;
+    background-color: rgba(147, 51, 234, 0.1);
+    color: #9333ea;
+    border: 1px solid rgba(147, 51, 234, 0.15);
   }
 
   .badge-neutral {
-    @apply inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider;
-    background-color: var(--color-neutral-100);
-    color: var(--color-neutral-700);
-    border: 1px solid var(--color-neutral-200);
+    @apply inline-flex items-center px-2.5 py-1 rounded-[8px] text-[11px] font-bold uppercase tracking-wider;
+    background-color: rgba(113, 111, 111, 0.1);
+    color: var(--color-secondary);
+    border: 1px solid rgba(113, 111, 111, 0.15);
   }
 
   /* ========================================
      ALERT/NOTIFICATION STYLES
      ======================================== */
   .alert-success {
-    @apply rounded-2xl p-5 shadow-sm;
+    @apply rounded-xl p-5 border;
     background-color: var(--color-success-50);
-    border: 1px solid color-mix(in srgb, var(--color-success-500) 30%, transparent);
+    border-color: var(--color-success-700);
     color: var(--color-success-700);
   }
 
   .alert-warning {
-    @apply rounded-2xl p-5 shadow-sm;
+    @apply rounded-xl p-5 border;
     background-color: var(--color-warning-50);
-    border: 1px solid color-mix(in srgb, var(--color-warning-500) 30%, transparent);
+    border-color: var(--color-warning-700);
     color: var(--color-warning-700);
   }
 
   .alert-error {
-    @apply rounded-2xl p-5 shadow-sm;
+    @apply rounded-xl p-5 border;
     background-color: var(--color-error-50);
-    border: 1px solid color-mix(in srgb, var(--color-error-500) 30%, transparent);
+    border-color: var(--color-error-700);
     color: var(--color-error-700);
   }
 
   .alert-info {
-    @apply rounded-2xl p-5 shadow-sm;
-    background-color: var(--color-primary-50);
-    border: 1px solid color-mix(in srgb, var(--color-primary-500) 30%, transparent);
-    color: var(--color-primary-700);
+    @apply rounded-xl p-5 border;
+    background-color: var(--color-neutral);
+    border-color: var(--color-tertiary);
+    color: var(--color-primary);
+  }
+
+  /* Bottom tab bar safe area for notched devices */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }

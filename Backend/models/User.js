@@ -9,6 +9,15 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, "Name cannot be more than 100 characters"],
     },
+    username: {
+      type: String,
+      required: [true, "Please provide a username"],
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+      match: [/^[a-zA-Z0-9_]+$/, "Username can only contain alphanumeric characters and underscores, and no spaces"],
+    },
     email: {
       type: String,
       required: [true, "Please provide an email"],
@@ -145,6 +154,18 @@ const userSchema = new mongoose.Schema(
       enum: ["public", "private"],
       default: "private",
     },
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,

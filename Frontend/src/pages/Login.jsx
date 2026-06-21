@@ -25,23 +25,23 @@ export default function Login() {
     e.preventDefault();
 
     if (!formData.email.trim()) {
-      toast.warning("Please enter your email address");
+      toast.warning("Email address is required.");
       return;
     }
 
     if (!formData.password.trim()) {
-      toast.warning("Please enter your password");
+      toast.warning("Password is required.");
       return;
     }
 
     setLoading(true);
     try {
       const response = await login(formData);
-      toast.success("Logged in successfully!");
+      toast.success("Welcome back! Logged in successfully.");
       if (response?.user?.profileComplete) navigate("/dashboard");
       else navigate("/complete-profile");
     } catch (err) {
-      toast.error(err.message || "Login failed");
+      toast.error(err.message || "Unable to log in. Please check your credentials and try again.");
     } finally {
       setLoading(false);
     }
@@ -49,33 +49,17 @@ export default function Login() {
 
   return (
     <div className="page-wrap flex items-center justify-center min-h-[calc(100vh-160px)]">
-      <div className="w-full max-w-[70%] px-4">
+      <div className="w-full max-w-full md:max-w-[75%] px-2 md:px-4">
         <div
-          className="overflow-hidden rounded-2xl bg-white shadow-lg grid lg:grid-cols-2"
-          style={{ border: "1px solid var(--color-neutral-200)" }}
+          className="overflow-hidden rounded-3xl bg-surface shadow-sm grid lg:grid-cols-2 border border-secondary/15 p-3"
         >
           {/* Decorative Section */}
           <div
-            className="relative hidden w-full flex-col items-start justify-center p-12 lg:flex text-white overflow-hidden"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 42%, var(--color-accent-600) 100%)",
-            }}
+            className="relative hidden w-full flex-col items-start justify-center p-12 lg:flex text-white overflow-hidden rounded-2xl bg-primary"
           >
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 45%), radial-gradient(circle at bottom left, rgba(255,255,255,0.12), transparent 35%)",
-              }}
-            />
             <div className="relative z-10 w-full animate-fade-in-up">
               <span
-                className="inline-block rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide mb-6"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  border: "1px solid rgba(255,255,255,0.3)",
-                }}
+                className="inline-block rounded-xl px-4 py-1.5 text-xs font-bold tracking-wide mb-6 bg-white/20 border border-white/30 uppercase"
               >
                 Welcome Back
               </span>
@@ -83,8 +67,7 @@ export default function Login() {
                 Continue your workflow
               </h1>
               <p
-                className="text-lg max-w-md mb-8 leading-relaxed"
-                style={{ color: "var(--color-primary-100)" }}
+                className="text-lg max-w-md mb-8 leading-relaxed opacity-90"
               >
                 Log in and pick up where you left off. Discover jobs, connect
                 with clients, and ship real projects.
@@ -92,15 +75,10 @@ export default function Login() {
 
               <div className="space-y-4 text-sm font-medium">
                 <div
-                  className="flex items-center gap-4 p-4 rounded-xl"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                  }}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-white/10 border border-white/10"
                 >
                   <div
-                    className="p-3 rounded-xl"
-                    style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+                    className="p-3 rounded-xl bg-white/20"
                   >
                     <svg
                       className="w-5 h-5"
@@ -116,20 +94,15 @@ export default function Login() {
                       />
                     </svg>
                   </div>
-                  <p style={{ color: "var(--color-primary-50)" }}>
+                  <p className="text-white/90">
                     Discover active opportunities
                   </p>
                 </div>
                 <div
-                  className="flex items-center gap-4 p-4 rounded-xl"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                  }}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-white/10 border border-white/10"
                 >
                   <div
-                    className="p-3 rounded-xl"
-                    style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+                    className="p-3 rounded-xl bg-white/20"
                   >
                     <svg
                       className="w-5 h-5"
@@ -145,7 +118,7 @@ export default function Login() {
                       />
                     </svg>
                   </div>
-                  <p style={{ color: "var(--color-primary-50)" }}>
+                  <p className="text-white/90">
                     Apply with your profile instantly
                   </p>
                 </div>
@@ -154,18 +127,16 @@ export default function Login() {
           </div>
 
           {/* Form Section */}
-          <div className="flex w-full flex-col justify-center p-8 sm:p-12 lg:p-16 animate-fade-in z-10 bg-white">
+          <div className="flex w-full flex-col justify-center p-8 sm:p-12 lg:p-16 animate-fade-in z-10 bg-surface">
             <div className="mx-auto w-full max-w-md">
               <div className="text-center mb-10">
                 <h2
-                  className="text-3xl font-bold tracking-tight"
-                  style={{ color: "var(--color-neutral-900)" }}
+                  className="text-3xl font-bold tracking-tight text-primary"
                 >
                   Sign in
                 </h2>
                 <p
-                  className="mt-2 text-sm font-medium"
-                  style={{ color: "var(--color-neutral-500)" }}
+                  className="mt-2 text-sm font-semibold text-secondary"
                 >
                   Access your Skillify account
                 </p>
@@ -175,8 +146,7 @@ export default function Login() {
                 <div>
                   <label
                     htmlFor="login-email"
-                    className="mb-2 block text-sm font-semibold"
-                    style={{ color: "var(--color-neutral-700)" }}
+                    className="mb-2 block text-sm font-bold text-slate-700"
                   >
                     Email address
                   </label>
@@ -196,15 +166,13 @@ export default function Login() {
                   <div className="mb-2 flex items-center justify-between">
                     <label
                       htmlFor="login-password"
-                      className="block text-sm font-semibold"
-                      style={{ color: "var(--color-neutral-700)" }}
+                      className="block text-sm font-bold text-slate-700"
                     >
                       Password
                     </label>
                     <Link
                       to="/forgot-password"
-                      className="text-sm font-semibold transition-colors"
-                      style={{ color: "var(--color-primary-600)" }}
+                      className="text-sm font-bold text-tertiary hover:underline transition-colors"
                     >
                       Forgot password?
                     </Link>
@@ -223,8 +191,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute inset-y-0 right-3 flex items-center transition-colors"
-                      style={{ color: "var(--color-neutral-400)" }}
+                      className="absolute inset-y-0 right-3 flex items-center text-secondary/70 hover:text-primary transition-colors"
                       tabIndex={-1}
                     >
                       {showPassword ? (
@@ -305,27 +272,23 @@ export default function Login() {
 
               <div className="mt-8 text-center space-y-3">
                 <p
-                  className="text-sm font-medium"
-                  style={{ color: "var(--color-neutral-600)" }}
+                  className="text-sm font-medium text-secondary"
                 >
                   New to Skillify?{" "}
                   <Link
                     to="/signup"
-                    className="font-semibold transition-colors"
-                    style={{ color: "var(--color-primary-600)" }}
+                    className="font-bold text-tertiary hover:underline transition-colors"
                   >
                     Create an account
                   </Link>
                 </p>
                 <p
-                  className="text-sm font-medium"
-                  style={{ color: "var(--color-neutral-500)" }}
+                  className="text-sm font-medium text-secondary"
                 >
                   Need to verify your email?{" "}
                   <Link
                     to="/verify-email"
-                    className="font-semibold transition-colors"
-                    style={{ color: "var(--color-primary-600)" }}
+                    className="font-bold text-tertiary hover:underline transition-colors"
                   >
                     Verify now
                   </Link>

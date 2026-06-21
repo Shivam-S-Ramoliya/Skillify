@@ -4,6 +4,76 @@ import { api } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import Skeleton from "../components/common/Skeleton";
+import ProfileCard from "../components/cards/ProfileCard";
+
+function JobCardSkeleton() {
+  return (
+    <div className="surface-card p-6 md:p-8 relative overflow-hidden flex flex-col h-full animate-pulse">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-center gap-4 w-full">
+          <Skeleton className="w-12 h-12 rounded-xl flex-shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-1/3" />
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 mb-4 ml-16">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+      <div className="mt-auto pt-5 flex items-center justify-between border-t border-secondary/10">
+        <Skeleton className="h-10 w-28 rounded-lg" />
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-10 w-10 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FreelancerCardSkeleton() {
+  return (
+    <div className="surface-card flex h-full flex-col overflow-hidden animate-pulse">
+      <div className="h-24 bg-secondary/10 dark:bg-secondary/20"></div>
+      <div className="-mt-10 px-6 pb-6 flex flex-col flex-grow relative z-10">
+        <div className="flex items-end gap-3">
+          <Skeleton className="h-20 w-20 rounded-2xl border-2 border-surface" />
+          <div className="pb-1 space-y-1.5 flex-1">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-3 w-1/3" />
+            <Skeleton className="h-3.5 w-1/2" />
+          </div>
+        </div>
+        <Skeleton className="h-4 w-32 mt-4" />
+        <Skeleton className="h-3.5 w-full mt-3" />
+        <Skeleton className="h-3.5 w-4/5 mt-1" />
+        <div className="mt-4 pt-4 flex flex-wrap gap-2 border-t border-secondary/10">
+          <Skeleton className="h-6 w-14 rounded-lg" />
+          <Skeleton className="h-6 w-14 rounded-lg" />
+          <Skeleton className="h-6 w-14 rounded-lg" />
+        </div>
+        <Skeleton className="h-10 w-full mt-5 rounded-lg" />
+      </div>
+    </div>
+  );
+}
 import { setPageTitle, resetPageTitle } from "../utils/pageTitle";
 import { motion } from "framer-motion";
 import {
@@ -28,24 +98,24 @@ const GithubIcon = ({ className }) => (
 
 const statusStyles = {
   pending: {
-    bg: "var(--color-warning-50)",
+    bg: "rgba(245, 158, 11, 0.1)",
     text: "var(--color-warning-700)",
-    border: "var(--color-warning-100)",
+    border: "rgba(245, 158, 11, 0.2)",
   },
   accepted: {
-    bg: "var(--color-accent-50)",
-    text: "var(--color-accent-700)",
-    border: "var(--color-accent-200)",
+    bg: "rgba(34, 197, 94, 0.1)",
+    text: "var(--color-success-700)",
+    border: "rgba(34, 197, 94, 0.2)",
   },
   rejected: {
-    bg: "var(--color-error-50)",
+    bg: "rgba(239, 68, 68, 0.1)",
     text: "var(--color-error-700)",
-    border: "var(--color-error-100)",
+    border: "rgba(239, 68, 68, 0.2)",
   },
   withdrawn: {
-    bg: "var(--color-neutral-100)",
-    text: "var(--color-neutral-600)",
-    border: "var(--color-neutral-200)",
+    bg: "rgba(113, 111, 111, 0.1)",
+    text: "var(--color-secondary)",
+    border: "rgba(113, 111, 111, 0.15)",
   },
 };
 
@@ -72,18 +142,39 @@ const PRIVATE_WARNING_COOLDOWN_MS = 1500;
 export default function Discover() {
   const { user } = useAuth();
   const toast = useToast();
+  const [cols, setCols] = useState(4);
+  const [activeTab, setActiveTab] = useState("jobs"); // 'jobs' | 'freelancers'
+
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w >= 1280) setCols(4);
+      else if (w >= 1024) setCols(3);
+      else if (w >= 768) setCols(2);
+      else setCols(1);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [jobs, setJobs] = useState([]);
+  const [freelancers, setFreelancers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchSkill, setSearchSkill] = useState("");
+  const [searchFreelancer, setSearchFreelancer] = useState("");
   const [jobsPage, setJobsPage] = useState(1);
+  const [freelancersPage, setFreelancersPage] = useState(1);
   const [jobsTotalPages, setJobsTotalPages] = useState(1);
+  const [freelancersTotalPages, setFreelancersTotalPages] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
+  const [totalFreelancers, setTotalFreelancers] = useState(0);
   const [applyLoadingId, setApplyLoadingId] = useState("");
 
   useEffect(() => {
-    setPageTitle("Discover Jobs | Skillify");
+    setPageTitle(activeTab === "jobs" ? "Discover Jobs | Skillify" : "Discover Freelancers | Skillify");
     return () => resetPageTitle();
-  }, []);
+  }, [activeTab]);
 
   const isPublicProfile = user?.profileVisibility === "public";
 
@@ -92,20 +183,27 @@ export default function Discover() {
       setLoading(false);
       const now = Date.now();
       if (now - lastDiscoverPrivateWarningAt > PRIVATE_WARNING_COOLDOWN_MS) {
-        toast.warning("Set your profile visibility to Public to discover and apply for jobs.");
+        toast.warning("Your profile must be Public to discover other freelancers. Update it in your profile settings.");
         lastDiscoverPrivateWarningAt = now;
       }
       setJobs([]);
+      setFreelancers([]);
       setTotalJobs(0);
+      setTotalFreelancers(0);
       setJobsTotalPages(1);
+      setFreelancersTotalPages(1);
       return;
     }
   }, [isPublicProfile]);
 
   useEffect(() => {
     if (!isPublicProfile) return;
-    fetchJobs();
-  }, [jobsPage, isPublicProfile]);
+    if (activeTab === "jobs") {
+      fetchJobs();
+    } else {
+      fetchFreelancers();
+    }
+  }, [jobsPage, freelancersPage, activeTab, isPublicProfile]);
 
   const fetchJobs = async (overrides = {}) => {
     const effectiveJobsPage = overrides.jobsPage ?? jobsPage;
@@ -125,7 +223,31 @@ export default function Discover() {
         setTotalJobs(response.total || 0);
       }
     } catch (err) {
-      toast.error(err.message || "Failed to load jobs");
+      toast.error(err.message || "Could not load jobs right now. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFreelancers = async (overrides = {}) => {
+    const effectivePage = overrides.page ?? freelancersPage;
+    const effectiveSearch = overrides.search ?? searchFreelancer;
+
+    setLoading(true);
+    try {
+      const response = await api.discoverProfiles({
+        page: effectivePage,
+        limit: 8,
+        search: effectiveSearch,
+      });
+
+      if (response.success) {
+        setFreelancers(response.data || []);
+        setFreelancersTotalPages(response.pages || 1);
+        setTotalFreelancers(response.total || 0);
+      }
+    } catch (err) {
+      toast.error(err.message || "Could not load freelancers right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -134,27 +256,38 @@ export default function Discover() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (!isPublicProfile) return;
-    setJobsPage(1);
-    fetchJobs({ jobsPage: 1, skill: searchSkill });
+    if (activeTab === "jobs") {
+      setJobsPage(1);
+      fetchJobs({ jobsPage: 1, skill: searchSkill });
+    } else {
+      setFreelancersPage(1);
+      fetchFreelancers({ page: 1, search: searchFreelancer });
+    }
   };
 
   const handleClearFilters = () => {
     if (!isPublicProfile) return;
-    setSearchSkill("");
-    setJobsPage(1);
-    fetchJobs({ jobsPage: 1, skill: "" });
+    if (activeTab === "jobs") {
+      setSearchSkill("");
+      setJobsPage(1);
+      fetchJobs({ jobsPage: 1, skill: "" });
+    } else {
+      setSearchFreelancer("");
+      setFreelancersPage(1);
+      fetchFreelancers({ page: 1, search: "" });
+    }
   };
 
   const handleApply = async (jobId) => {
     if (!isPublicProfile) {
-      toast.warning("Set your profile visibility to Public to apply for jobs.");
+      toast.warning("Your profile must be Public to apply for jobs. Update it in your profile settings.");
       return;
     }
     setApplyLoadingId(jobId);
 
     try {
       await api.applyToJob(jobId);
-      toast.success("Application submitted successfully!");
+      toast.success("Application submitted! The employer will review it soon.");
       setJobs((prev) =>
         prev.map((job) =>
           job._id === jobId
@@ -163,38 +296,67 @@ export default function Discover() {
         ),
       );
     } catch (err) {
-      toast.error(err.message || "Failed to apply for this job");
+      toast.error(err.message || "Could not submit application. Please try again.");
     } finally {
       setApplyLoadingId("");
     }
   };
 
-  if (loading && jobsPage === 1) return <LoadingSpinner />;
+  // Render search layouts instantly, and render skeletons below inside tabs.
 
   return (
     <div className="page-wrap relative">
-      {/* Background Orbs */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-primary-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob pointer-events-none"></div>
-      <div
-        className="absolute top-60 right-10 w-96 h-96 bg-accent-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob pointer-events-none"
-        style={{ animationDelay: "2s" }}
-      ></div>
-
       <div className="page-container space-y-8 relative z-10">
+        {/* Toggle tabs */}
+        <div className="flex gap-2 md:gap-4 p-1 bg-secondary/5 border border-secondary/10 rounded-xl w-full md:w-fit">
+          <button
+            onClick={() => setActiveTab("jobs")}
+            className={`flex-1 md:flex-initial px-4 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer text-center ${
+              activeTab === "jobs"
+                ? "bg-tertiary text-white shadow-sm"
+                : "text-secondary hover:text-primary hover:bg-secondary/5"
+            }`}
+          >
+            Discover Jobs
+          </button>
+          <button
+            onClick={() => setActiveTab("freelancers")}
+            className={`flex-1 md:flex-initial px-4 md:px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 cursor-pointer text-center ${
+              activeTab === "freelancers"
+                ? "bg-tertiary text-white shadow-sm"
+                : "text-secondary hover:text-primary hover:bg-secondary/5"
+            }`}
+          >
+            Discover Freelancers
+          </button>
+        </div>
+
         <motion.section
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-8 md:p-12 relative overflow-hidden shadow-xl"
+          className="bg-surface border border-secondary/15 rounded-2xl p-5 md:p-12 relative overflow-hidden shadow-sm"
         >
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-primary-500"></div>
           <div className="relative z-10">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-neutral-900">
-              Discover <span className="text-gradient">Opportunities</span>
-            </h1>
-            <p className="text-lg font-medium max-w-2xl mb-8 text-neutral-600">
-              Explore freelance and open-source roles posted by our community of
-              innovators and creators.
-            </p>
+            {activeTab === "jobs" ? (
+              <>
+                <h1 className="text-2xl md:text-5xl font-extrabold tracking-tight mb-3 md:mb-4 text-primary">
+                  Discover <span className="text-tertiary">Opportunities</span>
+                </h1>
+                <p className="text-sm md:text-lg font-semibold max-w-2xl mb-6 md:mb-8 text-secondary">
+                  Explore freelance and open-source roles posted by our community of
+                  innovators and creators.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl md:text-5xl font-extrabold tracking-tight mb-3 md:mb-4 text-primary">
+                  Discover <span className="text-tertiary">Freelancers</span>
+                </h1>
+                <p className="text-sm md:text-lg font-semibold max-w-2xl mb-6 md:mb-8 text-secondary">
+                  Connect and collaborate with skilled developers, designers, and creators from around the world.
+                </p>
+              </>
+            )}
 
             <form
               onSubmit={handleSearch}
@@ -202,20 +364,30 @@ export default function Discover() {
             >
               <div className="relative flex-grow">
                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                  <Search className="w-5 h-5 text-neutral-400" />
+                  <Search className="w-5 h-5 text-secondary" />
                 </div>
-                <input
-                  type="text"
-                  value={searchSkill}
-                  onChange={(e) => setSearchSkill(e.target.value)}
-                  placeholder="Search by skill (React, Node.js, Design...)"
-                  className="input-base pl-14 py-4 text-base w-full shadow-sm"
-                />
+                {activeTab === "jobs" ? (
+                  <input
+                    type="text"
+                    value={searchSkill}
+                    onChange={(e) => setSearchSkill(e.target.value)}
+                    placeholder="Search by skill (React, Node.js, Design...)"
+                    className="input-base pl-14 py-4 text-base w-full"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={searchFreelancer}
+                    onChange={(e) => setSearchFreelancer(e.target.value)}
+                    placeholder="Search by name, username, role, or skills..."
+                    className="input-base pl-14 py-4 text-base w-full"
+                  />
+                )}
               </div>
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="btn-primary py-4 px-8 md:w-auto w-full shadow-md"
+                  className="btn-primary py-4 px-8 md:w-auto w-full"
                 >
                   Search
                 </button>
@@ -236,29 +408,38 @@ export default function Discover() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="mb-8 flex items-center justify-between px-2">
-            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-neutral-900">
-              <span className="flex h-3 w-3 rounded-full bg-accent-500 shadow-sm animate-pulse"></span>
-              Latest Jobs
-            </h2>
-            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full text-sm font-bold bg-primary-50 text-primary-700 border border-primary-100 shadow-sm">
-              {totalJobs} available
-            </div>
-          </div>
+          {activeTab === "jobs" ? (
+            <>
+              <div className="mb-8 flex items-center justify-between px-2">
+                <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-primary">
+                  <span className="flex h-3 w-3 rounded-full bg-tertiary shadow-sm animate-pulse"></span>
+                  Latest Jobs
+                </h2>
+                <div className="badge-primary text-xs">
+                  {totalJobs} available
+                </div>
+              </div>
 
-          {jobs.length === 0 ? (
+          {loading && jobsPage === 1 ? (
+            <div className="grid gap-6 lg:grid-cols-2">
+              <JobCardSkeleton />
+              <JobCardSkeleton />
+              <JobCardSkeleton />
+              <JobCardSkeleton />
+            </div>
+          ) : jobs.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass-card p-16 text-center shadow-lg"
+              className="bg-surface border border-secondary/15 rounded-2xl p-16 text-center shadow-sm"
             >
-              <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6 bg-neutral-100 text-neutral-400 shadow-sm">
+              <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6 bg-secondary/5 text-secondary border border-secondary/10">
                 <Search className="w-10 h-10" />
               </div>
-              <h3 className="text-2xl font-bold tracking-tight mb-2 text-neutral-900">
+              <h3 className="text-2xl font-bold tracking-tight mb-2 text-primary">
                 No jobs found
               </h3>
-              <p className="font-medium text-neutral-500 mb-6 max-w-md mx-auto">
+              <p className="font-medium text-secondary mb-6 max-w-md mx-auto">
                 We couldn't find any opportunities matching your current filter.
                 Try adjusting your search criteria.
               </p>
@@ -281,21 +462,19 @@ export default function Discover() {
                   <motion.article
                     variants={cardVariants}
                     key={job._id}
-                    className="group glass-card-hover p-6 md:p-8 relative overflow-hidden flex flex-col h-full shadow-md"
+                    className="group surface-card-hover p-5 md:p-8 relative overflow-hidden flex flex-col h-full"
                   >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black flex-shrink-0 transition-all duration-300 group-hover:bg-primary-600 group-hover:text-white bg-primary-50 text-primary-600 border border-primary-200 shadow-sm">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black flex-shrink-0 transition-all duration-200 group-hover:bg-tertiary/10 group-hover:text-tertiary bg-secondary/5 text-primary border border-secondary/10 shadow-sm">
                           {job.jobName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold transition-colors line-clamp-1 text-neutral-900 group-hover:text-primary-600">
+                          <h3 className="text-lg font-bold transition-colors line-clamp-1 text-primary group-hover:text-tertiary">
                             {job.jobName}
                           </h3>
-                          <p className="mt-1 text-sm font-semibold flex items-center gap-1.5 text-neutral-500">
-                            <Briefcase className="w-4 h-4 text-primary-400" />
+                          <p className="mt-1 text-sm font-semibold flex items-center gap-1.5 text-secondary">
+                            <Briefcase className="w-4 h-4 text-tertiary" />
                             {job.postedBy?.name || "Unknown"}
                           </p>
                         </div>
@@ -303,7 +482,7 @@ export default function Discover() {
 
                       {job.applicationStatus && (
                         <span
-                          className="rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider shadow-sm"
+                          className="rounded-lg px-2.5 py-1 text-xs font-bold uppercase tracking-wider border"
                           style={{
                             backgroundColor:
                               statusStyles[job.applicationStatus]?.bg ||
@@ -311,7 +490,9 @@ export default function Discover() {
                             color:
                               statusStyles[job.applicationStatus]?.text ||
                               statusStyles.pending.text,
-                            border: `1px solid ${statusStyles[job.applicationStatus]?.border || statusStyles.pending.border}`,
+                            borderColor:
+                              statusStyles[job.applicationStatus]?.border ||
+                              statusStyles.pending.border,
                           }}
                         >
                           {job.applicationStatus}
@@ -322,7 +503,7 @@ export default function Discover() {
                     {/* Posted and Closes dates */}
                     <div className="flex items-center gap-4 mb-4 ml-16 text-sm">
                       {job.createdAt && (
-                        <div className="flex items-center gap-1.5 text-slate-500">
+                        <div className="flex items-center gap-1.5 text-secondary">
                           <Calendar className="w-3.5 h-3.5" />
                           <span className="font-medium">
                             Posted{" "}
@@ -356,7 +537,7 @@ export default function Discover() {
                     </div>
 
                     <div className="mb-4 flex-grow">
-                      <p className="line-clamp-2 text-sm leading-relaxed font-medium text-neutral-600">
+                      <p className="line-clamp-2 text-sm leading-relaxed font-medium text-secondary">
                         {job.jobDetails}
                       </p>
                     </div>
@@ -365,7 +546,7 @@ export default function Discover() {
                       {(job.skillsRequired || []).map((skill) => (
                         <span
                           key={`${job._id}-${skill}`}
-                          className="rounded-lg px-3 py-1.5 text-xs font-bold bg-primary-50 text-primary-700 border border-primary-100 shadow-sm"
+                          className="badge-neutral font-bold text-xs py-1 px-2.5"
                         >
                           {skill}
                         </span>
@@ -373,55 +554,55 @@ export default function Discover() {
                     </div>
 
                     {/* Info grid — labeled fields */}
-                    <div className="grid gap-3 text-sm sm:grid-cols-2 p-4 rounded-2xl mb-5 bg-slate-50/50 border border-slate-100">
+                    <div className="grid gap-3 text-xs sm:grid-cols-2 p-4 rounded-xl mb-5 bg-secondary/5 border border-secondary/10">
                       <div className="flex items-center gap-2.5">
-                        <div className="bg-blue-100 p-1.5 rounded-lg">
+                        <div className="bg-surface border border-secondary/15 shadow-sm p-1.5 rounded-lg flex-shrink-0">
                           <Briefcase className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-secondary">
                             Experience
                           </p>
-                          <p className="font-semibold text-slate-900 text-sm">
+                          <p className="font-semibold text-primary text-sm">
                             {job.experienceRequired || "Any"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2.5">
-                        <div className="bg-emerald-100 p-1.5 rounded-lg">
+                        <div className="bg-surface border border-secondary/15 shadow-sm p-1.5 rounded-lg flex-shrink-0">
                           <DollarSign className="w-4 h-4 text-emerald-600" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-secondary">
                             Salary
                           </p>
-                          <p className="font-semibold text-slate-900 text-sm">
+                          <p className="font-semibold text-primary text-sm">
                             {job.salary || "Unpaid"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2.5">
-                        <div className="bg-violet-100 p-1.5 rounded-lg">
+                        <div className="bg-surface border border-secondary/15 shadow-sm p-1.5 rounded-lg flex-shrink-0">
                           <Info className="w-4 h-4 text-violet-600" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-secondary">
                             Type
                           </p>
-                          <p className="font-semibold text-slate-900 text-sm capitalize">
+                          <p className="font-semibold text-primary text-sm capitalize">
                             {job.compensationType}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2.5">
-                        <div className="bg-amber-100 p-1.5 rounded-lg">
+                        <div className="bg-surface border border-secondary/15 shadow-sm p-1.5 rounded-lg flex-shrink-0">
                           <Calendar className="w-4 h-4 text-amber-600" />
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-secondary">
                             Duration
                           </p>
-                          <p className="font-semibold text-slate-900 text-xs">
+                          <p className="font-semibold text-primary text-xs">
                             {new Date(job.durationFrom).toLocaleDateString(
                               "en-US",
                               { month: "short", day: "numeric" },
@@ -440,7 +621,7 @@ export default function Discover() {
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-5 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-100">
+                    <div className="mt-auto pt-5 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/15">
                       <div className="flex-1">
                         {!job.hasApplied ||
                         job.applicationStatus === "withdrawn" ? (
@@ -448,7 +629,7 @@ export default function Discover() {
                             type="button"
                             onClick={() => handleApply(job._id)}
                             disabled={applyLoadingId === job._id}
-                            className="btn-primary w-full py-3 shadow-md"
+                            className="btn-primary w-full py-2.5 px-4"
                           >
                             {applyLoadingId === job._id ? (
                               <span className="flex items-center justify-center gap-2">
@@ -481,7 +662,7 @@ export default function Discover() {
                           <button
                             type="button"
                             disabled
-                            className="btn-secondary w-full py-3 opacity-50 cursor-not-allowed"
+                            className="btn-secondary w-full py-2.5 opacity-50 cursor-not-allowed text-secondary border border-secondary/20"
                           >
                             Applied
                           </button>
@@ -491,11 +672,11 @@ export default function Discover() {
                       <div className="flex items-center gap-2">
                         {job.postedBy?._id && (
                           <Link
-                            to={`/profile/${job.postedBy._id}`}
-                            className="p-3 rounded-xl bg-white border border-neutral-200 text-neutral-600 shadow-sm hover:border-primary-300 hover:text-primary-600 transition-all"
+                            to={job.postedBy.username ? `/profile/${job.postedBy.username}` : `/profile/${job.postedBy._id}`}
+                            className="p-2.5 rounded-lg bg-surface border border-secondary/35 text-secondary hover:text-tertiary hover:border-tertiary transition-all duration-200 active:scale-[0.98]"
                             title={`View ${job.postedBy?.name || "Employer"}'s Profile`}
                           >
-                            <User className="w-5 h-5 transition-transform hover:scale-110" />
+                            <User className="w-5 h-5 transition-transform hover:scale-105" />
                           </Link>
                         )}
                         {job.githubRepoUrl && (
@@ -503,10 +684,10 @@ export default function Discover() {
                             href={job.githubRepoUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-3 rounded-xl bg-white border border-neutral-200 text-neutral-600 shadow-sm hover:border-primary-300 hover:text-primary-600 transition-all"
+                            className="p-2.5 rounded-lg bg-surface border border-secondary/35 text-secondary hover:text-tertiary hover:border-tertiary transition-all duration-200 active:scale-[0.98]"
                             title="View Repository"
                           >
-                            <GithubIcon className="w-5 h-5 transition-transform hover:scale-110" />
+                            <GithubIcon className="w-5 h-5 transition-transform hover:scale-105" />
                           </a>
                         )}
                         {job.jobDescriptionDocument && (
@@ -514,10 +695,10 @@ export default function Discover() {
                             href={job.jobDescriptionDocument}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-3 rounded-xl bg-white border border-neutral-200 text-neutral-600 shadow-sm hover:border-primary-300 hover:text-primary-600 transition-all"
+                            className="p-2.5 rounded-lg bg-surface border border-secondary/35 text-secondary hover:text-tertiary hover:border-tertiary transition-all duration-200 active:scale-[0.98]"
                             title="View Document"
                           >
-                            <FileText className="w-5 h-5 transition-transform hover:scale-110" />
+                            <FileText className="w-5 h-5 transition-transform hover:scale-105" />
                           </a>
                         )}
                       </div>
@@ -531,19 +712,19 @@ export default function Discover() {
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
-                  className="mt-12 flex items-center justify-center gap-4 p-4 rounded-2xl max-w-sm mx-auto bg-white border border-neutral-200 shadow-lg"
+                  className="mt-12 flex items-center justify-center gap-4 p-3 rounded-xl max-w-sm mx-auto bg-surface border border-secondary/15 shadow-sm"
                 >
                   <button
                     type="button"
                     onClick={() => setJobsPage((prev) => Math.max(1, prev - 1))}
                     disabled={jobsPage === 1}
-                    className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-all disabled:opacity-50 disabled:hover:bg-white"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center bg-surface border border-secondary/25 text-secondary hover:text-primary hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <p className="text-sm font-bold w-28 text-center uppercase tracking-wider text-neutral-700">
+                  <p className="text-sm font-bold w-28 text-center uppercase tracking-wider text-secondary">
                     Page{" "}
-                    <span className="text-base mx-1 text-primary-600">
+                    <span className="text-base mx-1 text-tertiary">
                       {jobsPage}
                     </span>
                     / {jobsTotalPages}
@@ -554,11 +735,107 @@ export default function Discover() {
                       setJobsPage((prev) => Math.min(jobsTotalPages, prev + 1))
                     }
                     disabled={jobsPage === jobsTotalPages}
-                    className="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-all disabled:opacity-50 disabled:hover:bg-white"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center bg-surface border border-secondary/25 text-secondary hover:text-primary hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </motion.div>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <>
+              <div className="mb-8 flex items-center justify-between px-2">
+                <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-primary">
+                  <span className="flex h-3 w-3 rounded-full bg-tertiary shadow-sm animate-pulse"></span>
+                  Active Freelancers
+                </h2>
+                <div className="badge-primary text-xs">
+                  {totalFreelancers} listed
+                </div>
+              </div>
+
+              {loading && freelancersPage === 1 ? (
+                <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <FreelancerCardSkeleton />
+                  <FreelancerCardSkeleton />
+                  <FreelancerCardSkeleton />
+                  <FreelancerCardSkeleton />
+                </div>
+              ) : freelancers.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-surface border border-secondary/15 rounded-2xl p-16 text-center shadow-sm"
+                >
+                  <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6 bg-secondary/5 text-secondary border border-secondary/10">
+                    <Search className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-2xl font-bold tracking-tight mb-2 text-primary">
+                    No freelancers found
+                  </h3>
+                  <p className="font-medium text-secondary mb-6 max-w-md mx-auto">
+                    We couldn't find any freelancers matching your search terms.
+                    Try adjusting your criteria.
+                  </p>
+                  <button
+                    onClick={handleClearFilters}
+                    className="btn-primary shadow-md"
+                  >
+                    Clear search
+                  </button>
+                </motion.div>
+              ) : (
+                <>
+                  <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  >
+                    {freelancers.slice(0, !searchFreelancer.trim() ? cols * 2 : undefined).map((fl) => (
+                      <motion.div variants={cardVariants} key={fl._id}>
+                        <ProfileCard user={fl} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {freelancersTotalPages > 1 && searchFreelancer.trim() !== "" && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      className="mt-12 flex items-center justify-center gap-4 p-3 rounded-xl max-w-sm mx-auto bg-surface border border-secondary/15 shadow-sm"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setFreelancersPage((prev) => Math.max(1, prev - 1))}
+                        disabled={freelancersPage === 1}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center bg-surface border border-secondary/25 text-secondary hover:text-primary hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <p className="text-sm font-bold w-28 text-center uppercase tracking-wider text-secondary">
+                        Page{" "}
+                        <span className="text-base mx-1 text-tertiary">
+                          {freelancersPage}
+                        </span>
+                        / {freelancersTotalPages}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFreelancersPage((prev) => Math.min(freelancersTotalPages, prev + 1))
+                        }
+                        disabled={freelancersPage === freelancersTotalPages}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center bg-surface border border-secondary/25 text-secondary hover:text-primary hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </motion.div>
+                  )}
+                </>
               )}
             </>
           )}

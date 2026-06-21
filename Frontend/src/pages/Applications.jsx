@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { api } from "../utils/api";
 import { useToast } from "../context/ToastContext";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import Skeleton from "../components/common/Skeleton";
 import { setPageTitle, resetPageTitle } from "../utils/pageTitle";
 import {
   MapPin,
@@ -31,7 +32,12 @@ export default function Applications() {
   const [jobApplications, setJobApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [jobAppsLoading, setJobAppsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("received");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    return tab === "sent" ? "sent" : "received";
+  });
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [reopenJob, setReopenJob] = useState(null);
   const [reopenDate, setReopenDate] = useState("");
@@ -47,7 +53,7 @@ export default function Applications() {
       setSentApplications(sentRes.data || []);
       setMyPostedJobs(postsRes.data || []);
     } catch (err) {
-      toast.error(err.message || "Failed to load applications");
+      toast.error(err.message || "Could not load your applications. Please refresh the page.");
     } finally {
       setLoading(false);
     }
@@ -59,6 +65,14 @@ export default function Applications() {
     return () => resetPageTitle();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab === "sent" || tab === "received") {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
+
   const handleSelectJob = async (job) => {
     setSelectedJob(job);
     setJobAppsLoading(true);
@@ -66,7 +80,7 @@ export default function Applications() {
       const res = await api.getReceivedApplicationsForJob(job._id);
       setJobApplications(res.data || []);
     } catch (err) {
-      toast.error(err.message || "Failed to load applications for this job");
+      toast.error(err.message || "Could not load applicants for this job. Please try again.");
     } finally {
       setJobAppsLoading(false);
     }
@@ -81,7 +95,7 @@ export default function Applications() {
     setActionLoadingId(applicationId + status);
     try {
       await api.updateApplicationStatus(applicationId, status);
-      toast.success(`Application ${status} successfully!`);
+      toast.success(`Application has been ${status}! The applicant has been notified.`);
       // Refresh the applications for this specific job
       if (selectedJob) {
         const res = await api.getReceivedApplicationsForJob(selectedJob._id);
@@ -91,7 +105,7 @@ export default function Applications() {
         setMyPostedJobs(postsRes.data || []);
       }
     } catch (err) {
-      toast.error(err.message || "Failed to update application status");
+      toast.error(err.message || "Could not update this application. Please try again.");
     } finally {
       setActionLoadingId("");
     }
@@ -101,11 +115,11 @@ export default function Applications() {
     setActionLoadingId(applicationId + "withdrawn");
     try {
       await api.updateApplicationStatus(applicationId, "withdrawn");
-      toast.success("Application withdrawn successfully!");
+      toast.success("Application withdrawn. You can reapply later if the job is still open.");
       const sentRes = await api.getSentApplications();
       setSentApplications(sentRes.data || []);
     } catch (err) {
-      toast.error(err.message || "Failed to withdraw application");
+      toast.error(err.message || "Could not withdraw application. Please try again.");
     } finally {
       setActionLoadingId("");
     }
@@ -124,14 +138,14 @@ export default function Applications() {
     setActionLoadingId(job._id + "toggle");
     try {
       await api.toggleJobStatus(job._id);
-      toast.success("Job closed successfully!");
+      toast.success("Job closed. No new applications will be accepted.");
       const postsRes = await api.getMyPostedJobs();
       setMyPostedJobs(postsRes.data || []);
       if (selectedJob && selectedJob._id === job._id) {
         setSelectedJob((prev) => ({ ...prev, status: "closed" }));
       }
     } catch (err) {
-      toast.error(err.message || "Failed to close job");
+      toast.error(err.message || "Could not close this job. Please try again.");
     } finally {
       setActionLoadingId("");
     }
@@ -153,7 +167,7 @@ export default function Applications() {
     setActionLoadingId(job._id + "toggle");
     try {
       await api.toggleJobStatus(job._id, reopenDate);
-      toast.success("Job re-opened successfully!");
+      toast.success("Job is now open and accepting applications again!");
       const postsRes = await api.getMyPostedJobs();
       setMyPostedJobs(postsRes.data || []);
       if (selectedJob && selectedJob._id === job._id) {
@@ -164,18 +178,80 @@ export default function Applications() {
         }));
       }
     } catch (err) {
-      toast.error(err.message || "Failed to re-open job");
+      toast.error(err.message || "Could not re-open this job. Please try again.");
     } finally {
       setActionLoadingId("");
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="page-wrap relative animate-pulse" id="applications-page">
+        <div className="page-container space-y-8 relative z-10">
+          {/* Header Skeleton */}
+          <section className="glass-card p-8 md:p-10 border border-slate-200/60 bg-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="absolute top-0 left-0 w-2 h-full bg-secondary/20"></div>
+            <div className="space-y-3 flex-1">
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="h-5 w-72" />
+            </div>
+            <div className="flex gap-3 bg-slate-50/50 p-2 rounded-2xl border border-slate-200/50 self-start md:self-end">
+              <Skeleton className="h-10 w-28 rounded-xl" />
+              <Skeleton className="h-10 w-28 rounded-xl" />
+            </div>
+          </section>
+
+          {/* List of Applications Skeletons */}
+          <div className="space-y-4">
+            <div className="bg-surface border border-secondary/15 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1">
+                <Skeleton className="h-12 w-12 rounded-xl" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-16 rounded-lg" />
+                <Skeleton className="h-6 w-16 rounded-lg" />
+              </div>
+            </div>
+            <div className="bg-surface border border-secondary/15 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1">
+                <Skeleton className="h-12 w-12 rounded-xl" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-16 rounded-lg" />
+                <Skeleton className="h-6 w-16 rounded-lg" />
+              </div>
+            </div>
+            <div className="bg-surface border border-secondary/15 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1">
+                <Skeleton className="h-12 w-12 rounded-xl" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-16 rounded-lg" />
+                <Skeleton className="h-6 w-16 rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const activeButton =
-    "rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition-all";
+    "rounded-xl bg-blue-600 px-4 md:px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition-all flex-1 md:flex-initial text-center";
   const inactiveButton =
-    "rounded-xl bg-white/60 backdrop-blur-sm border border-slate-200/80 px-6 py-2.5 text-sm font-bold text-slate-600 hover:bg-white hover:text-blue-600 transition-all shadow-sm";
+    "rounded-xl bg-white/60 backdrop-blur-sm border border-slate-200/80 px-4 md:px-6 py-2.5 text-sm font-bold text-slate-600 hover:bg-white hover:text-blue-600 transition-all shadow-sm flex-1 md:flex-initial text-center";
 
   const totalReceivedCount = myPostedJobs.reduce(
     (sum, job) => sum + (job.applicantCount || 0),
@@ -193,13 +269,13 @@ export default function Applications() {
 
       <div className="page-container space-y-8 relative z-10">
         {/* Header */}
-        <section className="glass-card p-8 md:p-10 border border-slate-200/60 bg-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <section className="glass-card p-5 md:p-10 border border-slate-200/60 bg-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
           <div className="absolute top-0 left-0 w-2 h-full bg-blue-600"></div>
           <div className="relative z-10">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-3">
+            <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-2 md:mb-3">
               Applications
             </h1>
-            <p className="text-lg font-medium text-slate-600">
+            <p className="text-sm md:text-lg font-medium text-slate-600">
               Track what you received and what you sent in one place.
             </p>
           </div>
@@ -426,7 +502,7 @@ function MyPostedJobsGrid({
             key={job._id}
             id={`job-card-${job._id}`}
             onClick={() => onSelectJob(job)}
-            className="group glass-card p-6 md:p-8 border border-slate-200/60 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col h-full cursor-pointer"
+            className="group glass-card p-5 md:p-8 border border-slate-200/60 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col h-full cursor-pointer"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {/* Top accent bar */}
@@ -469,7 +545,7 @@ function MyPostedJobsGrid({
             </div>
 
             {/* Dates row */}
-            <div className="flex items-center gap-4 mb-4 ml-16 text-sm">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-4 md:ml-16 text-sm">
               <div className="flex items-center gap-1.5 text-slate-500">
                 <Calendar className="w-3.5 h-3.5" />
                 <span className="font-medium">
@@ -521,7 +597,7 @@ function MyPostedJobsGrid({
             </div>
 
             {/* Info grid — labeled fields */}
-            <div className="grid gap-3 text-sm sm:grid-cols-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 mb-5">
+            <div className="grid gap-3 text-sm grid-cols-1 sm:grid-cols-2 bg-slate-50/50 p-3 md:p-4 rounded-2xl border border-slate-100 mb-5">
               <div className="flex items-center gap-2.5">
                 <div className="bg-blue-100 p-1.5 rounded-lg">
                   <Briefcase className="w-4 h-4 text-blue-600" />
@@ -586,7 +662,7 @@ function MyPostedJobsGrid({
             </div>
 
             {/* Footer */}
-            <div className="mt-auto border-t border-slate-100 pt-5 flex items-center justify-between gap-3">
+            <div className="mt-auto border-t border-slate-100 pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold text-blue-600 group-hover:text-blue-700 flex items-center gap-1.5 transition-colors">
                   View Applicants
@@ -664,7 +740,51 @@ function ReceivedJobApplications({
   onBack,
   onUpdateStatus,
 }) {
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <section className="space-y-6 animate-pulse">
+        {/* Back button + job header placeholder */}
+        <div className="glass-card p-6 md:p-8 border border-slate-200/60 bg-white relative overflow-hidden space-y-4">
+          <div className="absolute top-0 left-0 w-2 h-full bg-secondary/20"></div>
+          <Skeleton className="h-8 w-24 rounded-lg" />
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+
+        {/* Applicants Grid Placeholder */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="bg-surface border border-secondary/15 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-20 rounded-lg" />
+              <Skeleton className="h-8 w-20 rounded-lg" />
+            </div>
+          </div>
+          <div className="bg-surface border border-secondary/15 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-20 rounded-lg" />
+              <Skeleton className="h-8 w-20 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const pendingCount = applications.filter(
     (a) => a.status === "pending",
@@ -933,7 +1053,7 @@ function ReceivedJobApplications({
                   <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
                     {applicant._id && (
                       <Link
-                        to={`/profile/${applicant._id}`}
+                        to={applicant.username ? `/profile/${applicant.username}` : `/profile/${applicant._id}`}
                         className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm text-sm"
                       >
                         View Profile
@@ -1198,7 +1318,7 @@ function SentApplicationsList({ applications, actionLoadingId, onWithdraw }) {
               <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center gap-3">
                 {employer._id && (
                   <Link
-                    to={`/profile/${employer._id}`}
+                    to={employer.username ? `/profile/${employer.username}` : `/profile/${employer._id}`}
                     className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm text-sm"
                   >
                     View Employer

@@ -12,12 +12,35 @@
   }
 }
 
+@keyframes slide-in-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @keyframes progress {
   from {
     width: 100%;
   }
   to {
     width: 0%;
+  }
+}
+
+/* Mobile: slide down from top */
+.toast-item {
+  animation: slide-in-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Desktop: slide in from right */
+@media (min-width: 768px) {
+  .toast-item {
+    animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }
 

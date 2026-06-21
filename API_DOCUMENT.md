@@ -19,8 +19,11 @@ All routes are prefixed with `/api`.
 | `POST` | `/login`               | Login user                         |    ❌    |
 | `POST` | `/verify-email`        | Verify email with JWT link token   |    ❌    |
 | `POST` | `/resend-verification` | Resend verification email          |    ❌    |
+| `POST` | `/check-verification`  | Check verification & login user    |    ❌    |
 | `POST` | `/forgot-password`     | Send password reset link           |    ❌    |
 | `POST` | `/reset-password`      | Reset password using token         |    ❌    |
+| `POST` | `/refresh`             | Refresh Access Token using cookie  |    ❌    |
+| `POST` | `/logout`              | Logout & clear cookies             |    ❌    |
 | `GET`  | `/me`                  | Get current logged-in user details |    ✅    |
 
 ### 2. Profile Routes (`/api/profile`)
@@ -36,6 +39,9 @@ All routes are prefixed with `/api`.
 | `POST`   | `/upload-resume`  | Upload resume                  |    ✅    |
 | `POST`   | `/request-delete` | Request account deletion (OTP) |    ✅    |
 | `DELETE` | `/delete`         | Confirm account delete         |    ✅    |
+| `POST`   | `/:userIdOrUsername/follow` | Follow a user        |    ✅    |
+| `POST`   | `/:userIdOrUsername/unfollow` | Unfollow a user    |    ✅    |
+| `POST`   | `/:userIdOrUsername/remove-follower` | Remove follower |    ✅    |
 | `GET`    | `/:userId`        | Get a specific user's profile  |    ❌    |
 
 ### 3. Jobs Routes (`/api/jobs`)
@@ -51,6 +57,7 @@ _Note: Accessing job creation, discovery, and applying functionalities requires 
 | `GET`  | `/applications/received`              | Applications received      |    ✅    |
 | `PUT`  | `/applications/:applicationId/status` | Accept/Reject/Withdraw app |    ✅    |
 | `POST` | `/:jobId/apply`                       | Apply to a job             |    ✅    |
+| `PUT`  | `/:jobId/status`                      | Toggle job status          |    ✅    |
 
 ### 4. General / Operations
 
@@ -229,6 +236,60 @@ _Note: Accessing job creation, discovery, and applying functionalities requires 
     "isVerified": true,
     "profileComplete": true
   }
+}
+```
+
+#### POST `/api/auth/check-verification`
+
+**Description:** Check if user's email is verified (and log them in if so)
+**Auth Required:** No
+**Request Body (JSON):**
+
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "user": {
+    "id": "60d5ecb8b48...",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "username": "johndoe",
+    "isVerified": true,
+    "profileComplete": true
+  }
+}
+```
+
+#### POST `/api/auth/refresh`
+
+**Description:** Refresh Access Token using Refresh Token cookie (rotates access and refresh tokens)
+**Auth Required:** No (Uses `refreshToken` Cookie)
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Token refreshed successfully"
+}
+```
+
+#### POST `/api/auth/logout`
+
+**Description:** Log user out, invalidate refresh token on server-side and clear cookies
+**Auth Required:** No (Uses `refreshToken` Cookie)
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
 }
 ```
 
@@ -436,6 +497,45 @@ _Note: Accessing job creation, discovery, and applying functionalities requires 
 }
 ```
 
+#### POST `/api/profile/:userIdOrUsername/follow`
+
+**Description:** Follow a user by their user ID or username
+**Auth Required:** Yes
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Successfully followed Jane Doe"
+}
+```
+
+#### POST `/api/profile/:userIdOrUsername/unfollow`
+
+**Description:** Unfollow a user by their user ID or username
+**Auth Required:** Yes
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Successfully unfollowed Jane Doe"
+}
+```
+
+#### POST `/api/profile/:userIdOrUsername/remove-follower`
+
+**Description:** Remove a user from your followers (forces them to unfollow you)
+**Auth Required:** Yes
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Successfully removed Jane Doe from your followers"
+}
+```
+
 ---
 
 ### 3. Jobs Routes
@@ -595,6 +695,28 @@ _Note: Accessing job creation, discovery, and applying functionalities requires 
     "applicant": "61a2...",
     "status": "pending"
   }
+}
+```
+
+#### PUT `/api/jobs/:jobId/status`
+
+**Description:** Toggle job status between "open" and "closed". Closing a job doesn't require an additional payload. Re-opening a job requires a new `closingDate` in the request body.
+**Auth Required:** Yes
+**Request Body (JSON - only required when re-opening a closed job):**
+
+```json
+{
+  "closingDate": "2026-07-01T00:00:00.000Z"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Job is now closed",
+  "data": { ... job document ... }
 }
 ```
 

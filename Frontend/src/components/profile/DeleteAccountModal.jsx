@@ -21,9 +21,9 @@ export default function DeleteAccountModal({ isOpen, onClose }) {
     try {
       await api.requestAccountDeletion();
       setSent(true);
-      toast.success("Confirmation link sent to your email!");
+      toast.success("Confirmation link sent! Check your email to proceed.");
     } catch (err) {
-      toast.error(err.message || "Failed to send confirmation link");
+      toast.error(err.message || "Could not send the confirmation link. Please try again.");
     } finally {
       setLoading(false);
     }

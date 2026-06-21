@@ -15,19 +15,19 @@ import {
 const pillars = [
   {
     title: "Freelance-ready profiles",
-    icon: <ShieldCheck className="w-8 h-8 text-primary-500" />,
+    icon: <ShieldCheck className="w-7 h-7 text-tertiary" />,
     description:
       "Showcase your expertise, experience, and project links so clients can trust you quickly and hire you seamlessly.",
   },
   {
     title: "Open project collaboration",
-    icon: <Layers className="w-8 h-8 text-primary-600" />,
+    icon: <Layers className="w-7 h-7 text-tertiary" />,
     description:
       "Publish contribution opportunities and attract contributors by matching required skills and verified experience.",
   },
   {
     title: "Transparent applications",
-    icon: <LayoutDashboard className="w-8 h-8 text-accent-500" />,
+    icon: <LayoutDashboard className="w-7 h-7 text-tertiary" />,
     description:
       "Track sent and received applications with clear status actions in one unified, clutter-free workspace.",
   },
@@ -60,57 +60,36 @@ export default function Home() {
 
   return (
     <div className="relative overflow-hidden w-full app-shell">
-      {/* Subtle Background Gradient Animations */}
-      <div
-        className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob pointer-events-none"
-        style={{ backgroundColor: "var(--color-primary-200)" }}
-      ></div>
-      <div
-        className="absolute top-60 right-0 w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-[128px] opacity-30 animate-blob pointer-events-none"
-        style={{
-          backgroundColor: "var(--color-accent-200)",
-          animationDelay: "2s",
-        }}
-      ></div>
-
       <div className="page-container relative z-10 pt-24 pb-32">
         {/* Hero Section */}
         <motion.section
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="text-center w-full max-w-none mx-auto px-4 mt-8"
+          className="text-center w-full max-w-none mx-auto px-2 sm:px-4 mt-4 md:mt-8"
         >
           <motion.div
             variants={itemVariants}
-            className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full surface-card mb-8"
+            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface border border-secondary/15 shadow-sm mb-8"
           >
-            <span
-              className="flex h-3 w-3 rounded-full animate-pulse"
-              style={{ backgroundColor: "var(--color-accent-500)" }}
-            ></span>
-            <span
-              className="text-sm font-bold uppercase tracking-wider"
-              style={{ color: "var(--color-primary-700)" }}
-            >
+            <span className="flex h-2.5 w-2.5 rounded-full bg-tertiary animate-pulse"></span>
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">
               Freelancer + Open Source Workspace
             </span>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
-            className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.15]"
-            style={{ color: "var(--color-neutral-900)" }}
+            className="text-3xl md:text-7xl font-extrabold tracking-[-0.03em] mb-6 md:mb-8 leading-[1.12] text-primary"
           >
             Build your career by shipping{" "}
-            <span className="text-gradient-premium">real projects</span> with
+            <span className="text-tertiary">real projects</span> with
             the perfect team
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="mt-6 text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed mb-12"
-            style={{ color: "var(--color-neutral-600)" }}
+            className="mt-4 md:mt-6 text-base md:text-2xl max-w-3xl mx-auto leading-relaxed mb-8 md:mb-12 text-secondary"
           >
             Discover opportunities, publish projects, and manage
             applications—all in one powerful platform built for freelancers.
@@ -126,7 +105,7 @@ export default function Home() {
                   to="/discover"
                   className="btn-primary flex items-center gap-2 group w-full sm:w-auto"
                 >
-                  <Briefcase className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <Briefcase className="w-5 h-5 group-hover:scale-105 transition-transform" />
                   Discover Jobs
                 </Link>
                 <Link
@@ -159,21 +138,15 @@ export default function Home() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
-          className="mt-40 w-full xl:w-[90%] mx-auto px-4 relative z-20"
+          className="mt-32 w-full xl:w-[90%] mx-auto px-4 relative z-20"
         >
-          <div className="glass-card p-10 md:p-14 relative overflow-hidden">
+          <div className="bg-surface border border-secondary/15 rounded-2xl p-5 md:p-14 relative overflow-hidden shadow-sm">
             <div className="flex flex-col md:flex-row gap-12 items-center">
               <div className="md:w-1/3">
-                <h2
-                  className="text-3xl font-extrabold tracking-tight mb-4"
-                  style={{ color: "var(--color-neutral-900)" }}
-                >
+                <h2 className="text-3xl font-extrabold tracking-tight mb-4 text-primary">
                   Everything you need
                 </h2>
-                <p
-                  className="text-lg leading-relaxed"
-                  style={{ color: "var(--color-neutral-600)" }}
-                >
+                <p className="text-lg leading-relaxed text-secondary">
                   Tools designed to help you find work, showcase your skills,
                   and ship real projects.
                 </p>
@@ -186,22 +159,13 @@ export default function Home() {
                   "Manage rich profiles",
                   "Share your portfolio",
                   "Collaborate globally",
-                ].map((item, i) => (
+                ].map((item) => (
                   <motion.div
                     key={item}
-                    whileHover={{ scale: 1.03 }}
-                    className="px-5 py-4 text-sm font-bold flex items-center gap-3 rounded-2xl cursor-default transition-all"
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.8)",
-                      color: "var(--color-neutral-800)",
-                      border: "1px solid var(--color-neutral-200)",
-                      boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
-                    }}
+                    whileHover={{ scale: 1.02 }}
+                    className="px-5 py-4 text-sm font-bold flex items-center gap-3 rounded-xl cursor-default transition-all bg-surface text-primary border border-secondary/15 shadow-sm hover:border-tertiary/30"
                   >
-                    <CheckCircle2
-                      className="w-5 h-5 flex-shrink-0"
-                      style={{ color: "var(--color-primary-500)" }}
-                    />
+                    <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-tertiary" />
                     {item}
                   </motion.div>
                 ))}
@@ -211,23 +175,17 @@ export default function Home() {
         </motion.section>
 
         {/* Pillars Section */}
-        <section className="mt-40 w-full mx-auto px-4">
+        <section className="mt-20 md:mt-32 w-full mx-auto px-2 sm:px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2
-              className="text-4xl md:text-5xl font-extrabold tracking-tight"
-              style={{ color: "var(--color-neutral-900)" }}
-            >
-              Built for <span className="text-gradient">real workflows</span>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-primary">
+              Built for <span className="text-tertiary">real workflows</span>
             </h2>
-            <p
-              className="mt-6 text-xl max-w-2xl mx-auto"
-              style={{ color: "var(--color-neutral-600)" }}
-            >
+            <p className="mt-6 text-xl max-w-2xl mx-auto text-secondary">
               Everything is designed to keep hiring and collaboration simple,
               transparent, and remarkably fast.
             </p>
@@ -240,29 +198,17 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.5 }}
-                className="glass-card-hover p-10 relative group overflow-hidden"
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="surface-card-hover p-6 md:p-10 relative group overflow-hidden"
               >
-                <div
-                  className="absolute top-0 left-0 w-full h-1.5 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
-                  style={{ backgroundColor: "var(--color-primary-500)" }}
-                ></div>
-                <div
-                  className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 group-hover:-translate-y-2 transition-transform duration-300"
-                  style={{ border: "1px solid var(--color-neutral-200)" }}
-                >
+                <div className="absolute top-0 left-0 w-full h-1 bg-tertiary transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                <div className="w-14 h-14 rounded-xl bg-surface border border-secondary/15 shadow-sm flex items-center justify-center mb-6 group-hover:-translate-y-1 transition-transform duration-300">
                   {pillar.icon}
                 </div>
-                <h3
-                  className="text-2xl font-bold mb-4 tracking-tight"
-                  style={{ color: "var(--color-neutral-900)" }}
-                >
+                <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 tracking-tight text-primary">
                   {pillar.title}
                 </h3>
-                <p
-                  className="leading-relaxed text-base"
-                  style={{ color: "var(--color-neutral-600)" }}
-                >
+                <p className="leading-relaxed text-base text-secondary">
                   {pillar.description}
                 </p>
               </motion.article>
@@ -272,49 +218,32 @@ export default function Home() {
 
         {/* CTA Section */}
         <motion.section
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mt-40 w-full xl:w-[80%] mx-auto px-4"
+          transition={{ duration: 0.5 }}
+          className="mt-32 w-full xl:w-[80%] mx-auto px-4"
         >
-          <div
-            className="relative rounded-[2.5rem] overflow-hidden p-14 md:p-24 text-center shadow-2xl"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-accent-600) 100%)",
-            }}
-          >
-            <div
-              className="absolute inset-0 bg-white opacity-5 mix-blend-overlay"
-              style={{
-                backgroundImage:
-                  "radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%)",
-              }}
-            ></div>
+          <div className="relative rounded-3xl overflow-hidden p-8 md:p-20 text-center bg-primary border border-primary/20 shadow-lg">
             <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+              <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 md:mb-6 tracking-tight leading-tight">
                 Ready to build your freelance career?
               </h2>
-              <p
-                className="text-xl md:text-2xl mb-12 max-w-2xl mx-auto font-medium"
-                style={{ color: "var(--color-primary-50)" }}
-              >
+              <p className="text-base md:text-2xl mb-8 md:mb-12 max-w-2xl mx-auto font-medium text-white/80">
                 Join thousands of professionals shipping real projects with the
                 perfect team.
               </p>
               {user ? (
                 <Link
                   to="/discover"
-                  className="btn-secondary text-lg px-10 py-4 shadow-xl text-primary-800"
+                  className="btn-primary bg-tertiary hover:bg-tertiary/90 text-white text-lg px-10 py-4 shadow-md inline-block"
                 >
                   Explore Opportunities Now
                 </Link>
               ) : (
                 <Link
                   to="/signup"
-                  className="btn-secondary text-lg px-10 py-4 shadow-xl"
-                  style={{ color: "var(--color-primary-800)" }}
+                  className="btn-primary bg-tertiary hover:bg-tertiary/90 text-white text-lg px-10 py-4 shadow-md inline-block"
                 >
                   Create Your Free Account
                 </Link>

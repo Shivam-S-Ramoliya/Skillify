@@ -36,7 +36,7 @@ export default function PublishJob() {
     if (!isPublicProfile) {
       const now = Date.now();
       if (!privateWarningShownRef.current && now - lastPublishPrivateWarningAt > PRIVATE_WARNING_COOLDOWN_MS) {
-        toast.warning("Set your profile visibility to Public to publish jobs.");
+        toast.warning("Your profile must be Public to publish jobs. Update it in your profile settings.");
         privateWarningShownRef.current = true;
         lastPublishPrivateWarningAt = now;
       }
@@ -52,7 +52,7 @@ export default function PublishJob() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isPublicProfile) {
-      toast.warning("Set your profile visibility to Public to publish jobs.");
+      toast.warning("Your profile must be Public to publish jobs. Update it in your profile settings.");
       return;
     }
 
@@ -62,13 +62,13 @@ export default function PublishJob() {
       formData.durationTo &&
       formData.durationFrom >= formData.durationTo
     ) {
-      toast.error("Job duration start date must be before the end date.");
+      toast.error("The job start date must be before the end date.");
       return;
     }
 
     const today = new Date().toISOString().split("T")[0];
     if (formData.closingDate && formData.closingDate < today) {
-      toast.error("Application closing date cannot be in the past.");
+      toast.error("The application deadline cannot be in the past.");
       return;
     }
 
@@ -77,7 +77,7 @@ export default function PublishJob() {
       formData.durationFrom &&
       formData.closingDate >= formData.durationFrom
     ) {
-      toast.error("Application closing date must be before the job start date.");
+      toast.error("The application deadline must be before the job start date.");
       return;
     }
 
@@ -94,7 +94,7 @@ export default function PublishJob() {
 
       const response = await api.publishJob(payload, jobDescriptionDocument);
       if (response.success) {
-        toast.success("Job published successfully and is now active!");
+        toast.success("🎉 Job published! It's now live and visible to freelancers.");
         setFormData({
           jobName: "",
           githubRepoUrl: "",
@@ -110,7 +110,7 @@ export default function PublishJob() {
         setJobDescriptionDocument(null);
       }
     } catch (err) {
-      toast.error(err.message || "Failed to publish job");
+      toast.error(err.message || "Could not publish your job. Please check all fields and try again.");
     } finally {
       setLoading(false);
     }
@@ -118,19 +118,12 @@ export default function PublishJob() {
 
   return (
     <div className="page-wrap relative">
-      {/* Decorative Background */}
-      <div className="absolute top-20 right-10 w-[400px] h-[400px] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[120px] animate-blob pointer-events-none"></div>
-      <div
-        className="absolute bottom-20 left-10 w-[500px] h-[500px] bg-blue-300/20 rounded-full mix-blend-multiply filter blur-[120px] animate-blob pointer-events-none"
-        style={{ animationDelay: "2s" }}
-      ></div>
-
       <div className="page-container relative z-10">
-        <section className="glass-card p-8 md:p-12 border border-slate-200/60 bg-white shadow-xl">
-          <div className="text-center mb-10">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-r from-primary-600 to-accent-600 rounded-3xl flex items-center justify-center shadow-lg shadow-primary-500/20 mb-6">
+        <section className="bg-surface border border-secondary/15 rounded-2xl p-5 md:p-12 shadow-sm">
+          <div className="text-center mb-12">
+            <div className="mx-auto w-16 h-16 bg-secondary/5 border border-secondary/10 rounded-2xl flex items-center justify-center mb-6 text-tertiary shadow-sm">
               <svg
-                className="w-10 h-10 text-white"
+                className="w-8 h-8"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -143,20 +136,17 @@ export default function PublishJob() {
                 />
               </svg>
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4">
-              Publish a{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600">
-                Job
-              </span>
+            <h1 className="text-2xl md:text-5xl font-extrabold tracking-tight text-primary mb-3 md:mb-4">
+              Publish a <span className="text-tertiary">Job</span>
             </h1>
-            <p className="text-lg font-medium text-slate-600 max-w-2xl mx-auto">
+            <p className="text-sm md:text-lg font-semibold text-secondary max-w-2xl mx-auto">
               Create a high-quality listing to attract the best freelancers and
               open contributors.
             </p>
           </div>
 
           {!isPublicProfile ? (
-            <div className="mb-8 rounded-2xl border border-red-200 bg-red-50/80 backdrop-blur-sm px-6 py-4 text-sm font-medium text-red-700 flex items-center gap-3 shadow-sm animate-fade-in-up">
+            <div className="alert-error mb-8 flex items-center gap-3 animate-fade-in-up font-bold">
               <svg
                 className="w-5 h-5 text-red-500 flex-shrink-0"
                 fill="none"
@@ -175,17 +165,17 @@ export default function PublishJob() {
             </div>
           ) : (
             <>
-              <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                  <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-200 pb-4">
-                    <span className="w-8 h-8 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">
+              <form onSubmit={handleSubmit} className="space-y-10">
+                <div className="bg-surface p-5 md:p-8 rounded-2xl border border-secondary/15 space-y-6">
+                  <h2 className="text-xl font-bold text-primary flex items-center gap-2.5 mb-4 border-b border-secondary/15 pb-4">
+                    <span className="w-8 h-8 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center text-sm font-bold border border-tertiary/15">
                       1
                     </span>
                     Basic Details
                   </h2>
                   <div>
-                    <label className="mb-2 block text-sm font-bold text-slate-700">
-                      Job Name *
+                    <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                      Job Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -193,13 +183,13 @@ export default function PublishJob() {
                       value={formData.jobName}
                       onChange={handleChange}
                       required
-                      className="input-base bg-white"
+                      className="input-base"
                       placeholder="e.g. Frontend Developer for SaaS Dashboard"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-bold text-slate-700">
+                    <label className="mb-2.5 block text-sm font-bold text-slate-700">
                       Work GitHub Repo (optional)
                     </label>
                     <input
@@ -207,14 +197,14 @@ export default function PublishJob() {
                       name="githubRepoUrl"
                       value={formData.githubRepoUrl}
                       onChange={handleChange}
-                      className="input-base bg-white"
+                      className="input-base"
                       placeholder="https://github.com/org/repo"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-bold text-slate-700">
-                      Specific Job Details *
+                    <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                      Specific Job Details <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="jobDetails"
@@ -222,23 +212,23 @@ export default function PublishJob() {
                       onChange={handleChange}
                       required
                       rows={5}
-                      className="input-base bg-white resize-y"
+                      className="input-base resize-y"
                       placeholder="Describe the scope, responsibilities, and expected outcomes..."
                     />
                   </div>
                 </div>
 
-                <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                  <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-200 pb-4">
-                    <span className="w-8 h-8 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">
+                <div className="bg-surface p-5 md:p-8 rounded-2xl border border-secondary/15 space-y-6">
+                  <h2 className="text-xl font-bold text-primary flex items-center gap-2.5 mb-4 border-b border-secondary/15 pb-4">
+                    <span className="w-8 h-8 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center text-sm font-bold border border-tertiary/15">
                       2
                     </span>
                     Requirements
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Skills Required *
+                      <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                        Skills Required <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -246,16 +236,16 @@ export default function PublishJob() {
                         value={formData.skillsRequired}
                         onChange={handleChange}
                         required
-                        className="input-base bg-white"
+                        className="input-base"
                         placeholder="React, TypeScript, API integration"
                       />
-                      <p className="text-xs text-slate-500 mt-2 font-medium">
+                      <p className="text-xs text-slate-500 mt-2 font-semibold">
                         Comma separated list of skills.
                       </p>
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Experience Required *
+                      <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                        Experience Required <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -263,16 +253,16 @@ export default function PublishJob() {
                         value={formData.experienceRequired}
                         onChange={handleChange}
                         required
-                        className="input-base bg-white"
+                        className="input-base"
                         placeholder="e.g. 2+ years"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                  <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-200 pb-4">
-                    <span className="w-8 h-8 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">
+                <div className="bg-surface p-5 md:p-8 rounded-2xl border border-secondary/15 space-y-6">
+                  <h2 className="text-xl font-bold text-primary flex items-center gap-2.5 mb-4 border-b border-secondary/15 pb-4">
+                    <span className="w-8 h-8 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center text-sm font-bold border border-tertiary/15">
                       3
                     </span>
                     Terms & Attachments
@@ -280,15 +270,15 @@ export default function PublishJob() {
 
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Compensation *
+                      <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                        Compensation <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <select
                           name="compensationType"
                           value={formData.compensationType}
                           onChange={handleChange}
-                          className="input-base bg-white appearance-none pr-10"
+                          className="input-base appearance-none pr-10"
                           required
                         >
                           <option value="paid">Paid</option>
@@ -296,9 +286,9 @@ export default function PublishJob() {
                             Unpaid / Open Source Contribution
                           </option>
                         </select>
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500">
                           <svg
-                            className="w-4 h-4 text-slate-400"
+                            className="w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -314,12 +304,12 @@ export default function PublishJob() {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                      <label className="mb-2.5 block text-sm font-bold text-slate-700">
                         Salary{" "}
                         {formData.compensationType === "paid" ? (
-                          <span className="text-blue-600">*</span>
+                          <span className="text-tertiary">*</span>
                         ) : (
-                          <span className="text-slate-400 font-medium">
+                          <span className="text-slate-400 font-semibold">
                             (optional)
                           </span>
                         )}
@@ -331,7 +321,7 @@ export default function PublishJob() {
                         onChange={handleChange}
                         required={formData.compensationType === "paid"}
                         disabled={formData.compensationType === "unpaid"}
-                        className="input-base bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-70"
+                        className="input-base disabled:cursor-not-allowed disabled:opacity-50"
                         placeholder={
                           formData.compensationType === "paid"
                             ? "e.g. ₹40,000/month or $50/hr"
@@ -341,10 +331,10 @@ export default function PublishJob() {
                     </div>
                   </div>
 
-                  <div className="grid gap-6 md:grid-cols-3">
+                  <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
                     <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Job Duration From *
+                      <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                        Job Duration From <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -352,12 +342,12 @@ export default function PublishJob() {
                         value={formData.durationFrom}
                         onChange={handleChange}
                         required
-                        className="input-base bg-white"
+                        className="input-base"
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Job Duration To *
+                      <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                        Job Duration To <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -365,12 +355,12 @@ export default function PublishJob() {
                         value={formData.durationTo}
                         onChange={handleChange}
                         required
-                        className="input-base bg-white"
+                        className="input-base"
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Applications Closing Date *
+                      <label className="mb-2.5 block text-sm font-bold text-slate-700">
+                        Applications Closing Date <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -378,20 +368,20 @@ export default function PublishJob() {
                         value={formData.closingDate}
                         onChange={handleChange}
                         required
-                        className="input-base bg-white border-error-200 focus:border-error-500 focus:ring-error-500/20"
+                        className="input-base"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-bold text-slate-700">
+                    <label className="mb-2.5 block text-sm font-bold text-slate-700">
                       Job Description Document (optional)
                     </label>
-                    <div className="relative mt-2 flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-2xl cursor-pointer bg-white/50 hover:bg-slate-50 transition-colors">
+                    <div className="relative mt-3 flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-slate-300/60 border-dashed rounded-xl cursor-pointer bg-surface hover:bg-secondary/5 hover:border-tertiary/50 transition-all duration-200">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <svg
-                            className="w-8 h-8 mb-3 text-slate-400"
+                            className="w-8 h-8 mb-3 text-tertiary opacity-80"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -403,13 +393,13 @@ export default function PublishJob() {
                               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                             ></path>
                           </svg>
-                          <p className="mb-1 text-sm text-slate-500 font-semibold">
-                            <span className="font-bold text-blue-600">
+                          <p className="mb-1 text-sm text-primary font-bold">
+                            <span className="text-tertiary">
                               Click to upload
                             </span>{" "}
                             or drag and drop
                           </p>
-                          <p className="text-xs text-slate-500 font-medium">
+                          <p className="text-xs text-secondary font-semibold">
                             PDF, DOCX, TXT, or MD (MAX 5MB)
                           </p>
                         </div>
@@ -426,32 +416,34 @@ export default function PublishJob() {
                       </label>
                     </div>
                     {jobDescriptionDocument && (
-                      <div className="mt-4 flex items-center justify-between p-4 rounded-xl bg-blue-50 border border-blue-100">
+                      <div className="mt-4 flex items-center justify-between p-3.5 rounded-xl bg-success-50 border border-success-700/20 shadow-sm animate-fade-in">
                         <div className="flex items-center gap-3">
-                          <svg
-                            className="w-6 h-6 text-blue-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                          <span className="text-sm font-bold text-blue-900">
+                          <div className="w-10 h-10 rounded-lg bg-success-700/10 flex items-center justify-center text-success-700">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                              />
+                            </svg>
+                          </div>
+                          <span className="text-sm font-bold text-success-700">
                             {jobDescriptionDocument.name}
                           </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => setJobDescriptionDocument(null)}
-                          className="text-blue-400 hover:text-rose-500 transition-colors"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-error-750 hover:bg-error-50 border border-error-200 transition-all duration-200"
                         >
                           <svg
-                            className="w-5 h-5"
+                            className="w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -473,7 +465,7 @@ export default function PublishJob() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="btn-primary w-full py-4 text-lg font-extrabold tracking-wide uppercase shadow-xl shadow-blue-500/20 group"
+                    className="btn-primary w-full py-3.5 text-base font-bold uppercase tracking-wider group"
                   >
                     <span className="flex items-center justify-center gap-2">
                       {loading ? (
@@ -519,7 +511,7 @@ export default function PublishJob() {
                       )}
                     </span>
                   </button>
-                  <p className="text-center text-xs text-slate-500 font-medium mt-4">
+                  <p className="text-center text-xs text-secondary font-semibold mt-4">
                     By publishing, you agree to our terms of service.
                   </p>
                 </div>

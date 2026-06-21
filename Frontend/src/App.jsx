@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import NavBar from "./components/layout/NavBar";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/Home";
@@ -60,11 +61,27 @@ function ProfileCompleteRoute({ children }) {
   return children;
 }
 
+// Profile Redirect Component
+function ProfileRedirect() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (user && user.username) {
+    return <Navigate to={`/profile/${user.username}`} replace />;
+  }
+
+  return <Navigate to="/dashboard" replace />;
+}
+
 function AppContent() {
+  const { user } = useAuth();
   return (
     <div className="app-shell flex flex-col">
       <NavBar />
-      <main className="grow">
+      <main className={`grow ${user ? "pb-20 md:pb-0" : ""}`}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -108,13 +125,13 @@ function AppContent() {
             path="/profile"
             element={
               <ProfileCompleteRoute>
-                <Profile />
+                <ProfileRedirect />
               </ProfileCompleteRoute>
             }
           />
 
           <Route
-            path="/profile/:userId"
+            path="/profile/:usernameOrId"
             element={
               <ProfileCompleteRoute>
                 <Profile />
@@ -152,11 +169,13 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <ToastProvider>
-          <AppContent />
-        </ToastProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <AppContent />
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 }

@@ -17,25 +17,18 @@ export default function CompleteProfile() {
 
   const handleSave = (response) => {
     updateUser(response.user);
-    toast.success("Profile completed successfully!");
+    toast.success("Profile completed! You're all set to start exploring.");
     if (response.profileComplete) navigate("/dashboard");
   };
 
   return (
     <div className="page-wrap relative flex items-center justify-center py-10 min-h-[calc(100vh-80px)]">
-      {/* Decorative Background */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[120px] animate-blob pointer-events-none z-0"></div>
-      <div
-        className="absolute top-60 left-0 w-[400px] h-[400px] bg-blue-300/20 rounded-full mix-blend-multiply filter blur-[120px] animate-blob pointer-events-none z-0"
-        style={{ animationDelay: "2s" }}
-      ></div>
-
-      <div className="page-container max-w-[70%] relative z-10 w-full animate-fade-in-up">
-        <section className="glass-card p-6 md:p-10 border border-slate-200/60 bg-white shadow-xl backdrop-blur-xl rounded-3xl">
-          <div className="text-center mb-10 border-b border-slate-200 pb-8">
-            <div className="w-20 h-20 mx-auto bg-blue-600 rounded-3xl flex items-center justify-center text-white mb-6 shadow-lg shadow-blue-500/30">
+      <div className="page-container max-w-full md:max-w-[70%] relative z-10 w-full animate-fade-in-up">
+        <section className="bg-surface border border-secondary/15 rounded-3xl p-6 md:p-10 shadow-sm">
+          <div className="text-center mb-10 border-b border-secondary/15 pb-8">
+            <div className="w-16 h-16 mx-auto bg-secondary/5 rounded-2xl flex items-center justify-center text-tertiary mb-6 border border-secondary/10 shadow-sm">
               <svg
-                className="w-10 h-10"
+                className="w-8 h-8"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -48,16 +41,16 @@ export default function CompleteProfile() {
                 />
               </svg>
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-              Complete your <span className="text-blue-600">Profile</span>
+            <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-primary">
+              Complete your <span className="text-tertiary">Profile</span>
             </h1>
-            <p className="mt-4 text-lg font-medium text-slate-600">
+            <p className="mt-3 md:mt-4 text-sm md:text-lg font-semibold text-secondary">
               Add your details so clients can discover you and hire you for
               their projects.
             </p>
           </div>
 
-          <div className="bg-slate-50/50 p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm relative z-10">
+          <div className="bg-surface p-6 md:p-8 rounded-xl border border-secondary/10 relative z-10">
             <EditProfileForm
               initialData={user}
               onSave={handleSave}

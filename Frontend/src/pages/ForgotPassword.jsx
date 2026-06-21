@@ -26,7 +26,7 @@ export default function ForgotPassword() {
           "If an account exists for that email, a reset link has been sent.",
       );
     } catch (err) {
-      toast.error(err.message || "Failed to send reset email");
+      toast.error(err.message || "Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -34,21 +34,13 @@ export default function ForgotPassword() {
 
   return (
     <div className="page-wrap relative flex items-center justify-center min-h-[calc(100vh-160px)] py-12">
-      <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-primary-200 blur-3xl opacity-40 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-accent-200 blur-3xl opacity-30 pointer-events-none" />
-
       <div className="relative z-10 w-full max-w-2xl px-4">
-        <div className="overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl shadow-indigo-500/10">
+        <div className="overflow-hidden rounded-3xl border border-secondary/15 bg-surface shadow-sm p-3">
           <div
-            className="px-8 py-10 text-white"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-500) 48%, var(--color-accent-600) 100%)",
-            }}
+            className="px-8 py-10 text-white rounded-2xl bg-primary"
           >
             <span
-              className="inline-flex rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
-              style={{ backgroundColor: "rgba(255,255,255,0.16)" }}
+              className="inline-flex rounded-xl px-4 py-1.5 text-xs font-bold uppercase tracking-widest bg-white/20 border border-white/30"
             >
               Password Reset
             </span>
@@ -61,13 +53,12 @@ export default function ForgotPassword() {
             </p>
           </div>
 
-          <div className="p-8 sm:p-10">
+          <div className="p-8 sm:p-10 bg-surface">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label
                   htmlFor="forgot-password-email"
-                  className="mb-2 block text-sm font-semibold"
-                  style={{ color: "var(--color-neutral-700)" }}
+                  className="mb-2 block text-sm font-bold text-slate-705"
                 >
                   Email address
                 </label>
@@ -92,17 +83,16 @@ export default function ForgotPassword() {
             </form>
 
             <div className="mt-8 flex flex-col items-center gap-3 text-center">
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-sm font-medium text-secondary">
                 Remembered your password?{" "}
                 <Link
                   to="/login"
-                  className="font-semibold transition-colors"
-                  style={{ color: "var(--color-primary-600)" }}
+                  className="font-bold text-tertiary hover:underline transition-colors"
                 >
                   Back to login
                 </Link>
               </p>
-              <p className="text-xs leading-6 text-slate-400">
+              <p className="text-xs leading-6 text-secondary/70">
                 The reset link is sent by email and expires after one hour.
               </p>
             </div>

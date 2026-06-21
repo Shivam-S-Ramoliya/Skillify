@@ -10,6 +10,9 @@ const {
   uploadResume,
   requestAccountDeletion,
   confirmAccountDeletion,
+  followUser,
+  unfollowUser,
+  removeFollower,
 } = require("../controllers/profileController");
 const protect = require("../middleware/auth");
 const multer = require("multer");
@@ -41,6 +44,11 @@ router.post("/upload-resume", protect, upload.single("resume"), uploadResume);
 // Account deletion routes
 router.post("/request-delete", protect, requestAccountDeletion);
 router.delete("/delete", protect, confirmAccountDeletion);
+
+// Follow/Unfollow routes
+router.post("/:userIdOrUsername/follow", protect, followUser);
+router.post("/:userIdOrUsername/unfollow", protect, unfollowUser);
+router.post("/:userIdOrUsername/remove-follower", protect, removeFollower);
 
 // Public route (keep last to avoid catching static paths)
 router.get("/:userId", getUserProfile);

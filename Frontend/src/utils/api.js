@@ -201,6 +201,12 @@ export const api = {
   getMyProfile: () => request("/api/profile/me"),
   getProfileStatus: () => request("/api/profile/status"),
   getUserProfile: (userId) => request(`/api/profile/${userId}`),
+  followUser: (usernameOrId) =>
+    request(`/api/profile/${usernameOrId}/follow`, { method: "POST" }),
+  unfollowUser: (usernameOrId) =>
+    request(`/api/profile/${usernameOrId}/unfollow`, { method: "POST" }),
+  removeFollower: (usernameOrId) =>
+    request(`/api/profile/${usernameOrId}/remove-follower`, { method: "POST" }),
   updateProfileVisibility: (profileVisibility) =>
     request("/api/profile/visibility", {
       method: "PUT",

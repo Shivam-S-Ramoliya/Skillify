@@ -12,6 +12,7 @@ export default function EditProfileForm({
   const toast = useToast();
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
+    username: initialData?.username || "",
     bio: initialData?.bio || "",
     location: initialData?.location || "",
     profilePicture: initialData?.profilePicture || "",
@@ -175,7 +176,7 @@ export default function EditProfileForm({
     const { name, value } = e.target;
     if (name === "availability" && value === "not available") {
       toast.warning(
-        "Your profile will show as not available for new opportunities.",
+        "Heads up — your profile will show as not available for new opportunities.",
       );
     }
     setFormData({ ...formData, [name]: value });
@@ -216,10 +217,10 @@ export default function EditProfileForm({
       if (response.success) {
         setFormData({ ...formData, profilePicture: response.profilePicture });
         setPicturePreview(response.profilePicture);
-        toast.success("Profile picture uploaded!");
+        toast.success("Profile picture updated!");
       }
     } catch (err) {
-      toast.error(err.message || "Failed to upload profile picture");
+      toast.error(err.message || "Could not upload profile picture. Please try a smaller file.");
     } finally {
       setUploadingPicture(false);
     }
@@ -234,10 +235,10 @@ export default function EditProfileForm({
       const response = await api.uploadResume(file);
       if (response.success) {
         setFormData({ ...formData, resume: response.resume });
-        toast.success("Resume uploaded!");
+        toast.success("Resume uploaded successfully!");
       }
     } catch (err) {
-      toast.error(err.message || "Failed to upload resume");
+      toast.error(err.message || "Could not upload resume. Please try a different file.");
     } finally {
       setUploadingResume(false);
     }
@@ -259,9 +260,9 @@ export default function EditProfileForm({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
-      toast.success("Resume downloaded!");
+      toast.success("Resume downloaded to your device.");
     } catch (err) {
-      toast.error(err.message || "Failed to download resume");
+      toast.error(err.message || "Could not download resume. Please try again.");
     }
   };
 
@@ -269,105 +270,116 @@ export default function EditProfileForm({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.warning("Please enter your name");
+      toast.warning("Name is required.");
+      return;
+    }
+
+    if (!formData.username.trim()) {
+      toast.warning("Username is required.");
+      return;
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(formData.username.trim())) {
+      toast.warning("Username can only contain letters, numbers, and underscores — no spaces.");
       return;
     }
 
     if (!formData.bio.trim()) {
-      toast.warning("Please enter your bio");
+      toast.warning("Bio is required. Tell others about yourself.");
       return;
     }
 
     if (!formData.location.trim()) {
-      toast.warning("Please select your location");
+      toast.warning("Location is required.");
       return;
     }
 
     if (!formData.skills.trim()) {
-      toast.warning("Please enter at least one skill");
+      toast.warning("Add at least one skill to help others find you.");
       return;
     }
 
     if (!formData.profilePicture) {
-      toast.warning("Please upload your profile picture");
+      toast.warning("A profile picture is required.");
       return;
     }
 
     if (!formData.resume) {
-      toast.warning("Please upload your resume/portfolio");
+      toast.warning("A resume or portfolio document is required.");
       return;
     }
 
     if (!formData.availability) {
-      toast.warning("Please select your availability");
+      toast.warning("Please select your availability status.");
       return;
     }
 
     if (formData.availability === "not available") {
       toast.warning(
-        "You selected 'Not Available'. Change availability to continue saving your profile.",
+        "You selected 'Not Available'. Change your availability to save your profile.",
       );
       return;
     }
 
     if (formData.education.length === 0) {
-      toast.warning("Please add at least one education entry");
+      toast.warning("Add at least one education entry.");
       return;
     }
 
     for (let index = 0; index < formData.education.length; index += 1) {
       const edu = formData.education[index];
       if (!edu.school?.trim()) {
-        toast.warning(`Education #${index + 1}: please enter school/college`);
+        toast.warning(`Education #${index + 1}: school/college name is required.`);
         return;
       }
       if (!edu.degree?.trim()) {
-        toast.warning(`Education #${index + 1}: please enter degree/standard`);
+        toast.warning(`Education #${index + 1}: degree/standard is required.`);
         return;
       }
       if (!edu.from) {
-        toast.warning(`Education #${index + 1}: please select 'From' date`);
+        toast.warning(`Education #${index + 1}: start date is required.`);
         return;
       }
       if (!edu.isCurrentlyStudying && !edu.to) {
         toast.warning(
-          `Education #${index + 1}: please select 'To' date or mark as currently studying`,
+          `Education #${index + 1}: end date is required, or mark as currently studying.`,
         );
         return;
       }
     }
 
     if (!formData.githubUrl.trim()) {
-      toast.warning("Please enter your GitHub URL");
+      toast.warning("GitHub URL is required.");
       return;
     }
 
     if (!formData.linkedinUrl.trim()) {
-      toast.warning("Please enter your LinkedIn URL");
+      toast.warning("LinkedIn URL is required.");
       return;
     }
 
     // Date Validation
     const validateDates = (arr, isEducation = false) => {
       for (const item of arr) {
-        if (!item.from) return "Please select 'From' date";
+        if (!item.from) return "Start date is required.";
 
         // Check if ongoing/current status
         const isOngoing = isEducation
           ? item.isCurrentlyStudying
           : item.to === "Present";
         if (!isOngoing && !item.to)
-          return `Please select 'To' date or mark as ${isEducation ? "currently studying" : "present"}`;
+          return `End date is required, or mark as ${isEducation ? "currently studying" : "present"}.`;
 
         const fromDate = new Date(item.from);
         const today = new Date();
 
-        if (fromDate > today) return "Start date cannot be in the future";
+        if (fromDate > today) return "Start date cannot be in the future.";
 
         if (!isOngoing) {
           const toDate = new Date(item.to);
-          if (toDate > today) return "End date cannot be in the future";
-          if (fromDate > toDate) return "Start date must come before End date";
+          if (toDate > today) return "End date cannot be in the future.";
+          if (fromDate > toDate) return "Start date must be before end date.";
         }
       }
       return null;
@@ -382,20 +394,20 @@ export default function EditProfileForm({
     for (let index = 0; index < formData.experience.length; index += 1) {
       const exp = formData.experience[index];
       if (!exp.company?.trim()) {
-        toast.warning(`Experience #${index + 1}: please enter company name`);
+        toast.warning(`Experience #${index + 1}: company name is required.`);
         return;
       }
       if (!exp.role?.trim()) {
-        toast.warning(`Experience #${index + 1}: please enter role`);
+        toast.warning(`Experience #${index + 1}: role is required.`);
         return;
       }
       if (!exp.from) {
-        toast.warning(`Experience #${index + 1}: please select 'From' date`);
+        toast.warning(`Experience #${index + 1}: start date is required.`);
         return;
       }
       if (!exp.to) {
         toast.warning(
-          `Experience #${index + 1}: please select 'To' date or mark as Present`,
+          `Experience #${index + 1}: end date is required, or mark as Present.`,
         );
         return;
       }
@@ -430,11 +442,11 @@ export default function EditProfileForm({
 
       const response = await api.updateProfile(payload);
       if (response.success) {
-        toast.success("Profile updated successfully!");
+        toast.success("Profile saved successfully!");
         onSave(response);
       }
     } catch (err) {
-      const message = err.message || "Failed to update profile";
+      const message = err.message || "Could not save profile. Please try again.";
       if (
         message.includes("open posted jobs") ||
         message.includes("pending applications")
@@ -451,14 +463,14 @@ export default function EditProfileForm({
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-500">
           Fields marked with <span className="text-red-500">*</span> are
           required.
         </p>
 
         {/* Name */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -467,13 +479,36 @@ export default function EditProfileForm({
             value={formData.name}
             onChange={handleChange}
             placeholder="Your full name"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-base"
           />
+        </div>
+
+        {/* Username */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
+            Username <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-4 flex items-center text-slate-500 font-bold text-sm">
+              @
+            </span>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="username"
+              className="input-base pl-9"
+            />
+          </div>
+          <p className="text-xs text-slate-500 mt-2">
+            Only alphanumeric characters and underscores are allowed. No spaces.
+          </p>
         </div>
 
         {/* Bio */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Bio <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -482,20 +517,20 @@ export default function EditProfileForm({
             onChange={handleChange}
             rows="4"
             placeholder="Tell us about yourself..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="input-base resize-none"
           />
         </div>
 
         {/* Location */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Location <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <select
               value={selectedCountryCode}
               onChange={handleCountryChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-base"
               required
             >
               <option value="">Select Country</option>
@@ -509,7 +544,7 @@ export default function EditProfileForm({
             <select
               value={selectedStateCode}
               onChange={handleStateChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="input-base disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!selectedCountryCode || states.length === 0}
               required
             >
@@ -530,7 +565,7 @@ export default function EditProfileForm({
             <select
               value={selectedCityName}
               onChange={handleCityChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="input-base disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!selectedCountryCode || cities.length === 0}
               required
             >
@@ -551,25 +586,25 @@ export default function EditProfileForm({
               ))}
             </select>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-slate-500 mt-2">
             Selected: {formData.location || "-"}
           </p>
         </div>
 
         {/* Profile Picture */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Profile Picture <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-4 items-start">
+          <div className="flex gap-6 items-center">
             {picturePreview && (
-              <div className="relative">
+              <div className="relative p-2 bg-surface rounded-xl border border-secondary/15 flex-shrink-0 shadow-sm">
                 <img
                   src={picturePreview}
                   alt="Preview"
-                  className="h-32 w-32 rounded-xl object-cover border-2 border-blue-200 shadow-md"
+                  className="h-28 w-28 rounded-lg object-cover"
                 />
-                <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                <span className="absolute -top-1.5 -right-1.5 bg-success-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
                   ✓ Current
                 </span>
               </div>
@@ -585,10 +620,10 @@ export default function EditProfileForm({
               />
               <label
                 htmlFor="editFormProfilePicture"
-                className="block w-full px-6 py-4 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+                className="block w-full px-6 py-5 bg-surface hover:bg-secondary/5 rounded-xl text-center cursor-pointer border-2 border-dashed border-secondary/25 hover:border-tertiary/50 transition-all duration-200"
               >
                 <svg
-                  className="w-8 h-8 text-blue-600 mx-auto mb-2"
+                  className="w-8 h-8 text-tertiary mx-auto mb-2 opacity-80"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -600,15 +635,15 @@ export default function EditProfileForm({
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <p className="text-sm font-semibold text-gray-700">
+                <p className="text-sm font-bold text-primary">
                   Click to upload picture
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-secondary mt-1">
                   PNG, JPG, GIF up to 10MB
                 </p>
               </label>
               {uploadingPicture && (
-                <div className="mt-3 flex items-center gap-2 text-blue-600">
+                <div className="mt-3 flex items-center gap-2 text-tertiary">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle
                       className="opacity-25"
@@ -625,7 +660,7 @@ export default function EditProfileForm({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  <p className="text-sm">Uploading picture...</p>
+                  <p className="text-sm font-semibold">Uploading picture...</p>
                 </div>
               )}
             </div>
@@ -634,29 +669,31 @@ export default function EditProfileForm({
 
         {/* Resume */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Resume/Portfolio <span className="text-red-500">*</span>
           </label>
           {formData.resume && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div className="mb-6 p-4 bg-success-50 border border-success-700/20 rounded-xl shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <svg
-                    className="w-5 h-5 text-green-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8 16.5a1 1 0 01-1-1V4a1 1 0 011-1h6a1 1 0 011 1v11.5a1 1 0 01-1 1H8zm6-11.5a.5.5 0 00-.5-.5h-5a.5.5 0 00-.5.5v11a.5.5 0 00.5.5h5a.5.5 0 00.5-.5v-11z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <div className="w-10 h-10 rounded-lg bg-success-700/10 flex items-center justify-center text-success-700">
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8 16.5a1 1 0 01-1-1V4a1 1 0 011-1h6a1 1 0 011 1v11.5a1 1 0 01-1 1H8zm6-11.5a.5.5 0 00-.5-.5h-5a.5.5 0 00-.5.5v11a.5.5 0 00.5.5h5a.5.5 0 00.5-.5v-11z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
                   <div>
-                    <p className="font-semibold text-green-900">
+                    <p className="font-bold text-success-700 text-sm">
                       Resume uploaded ✓
                     </p>
-                    <p className="text-xs text-green-700">
+                    <p className="text-xs text-secondary/70">
                       Ready to share with others
                     </p>
                   </div>
@@ -666,14 +703,14 @@ export default function EditProfileForm({
                     href={formData.resume}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                    className="btn-success !py-1.5 !px-3 !text-xs !rounded-lg"
                   >
                     👁️ View
                   </a>
                   <button
                     type="button"
                     onClick={handleResumeDownload}
-                    className="px-3 py-1.5 bg-gray-600 text-white text-xs font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+                    className="btn-secondary !py-1.5 !px-3 !text-xs !rounded-lg"
                   >
                     ⬇️ Download
                   </button>
@@ -691,10 +728,10 @@ export default function EditProfileForm({
           />
           <label
             htmlFor="editFormResumeFile"
-            className="block w-full px-6 py-4 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+            className="block w-full px-6 py-5 bg-surface hover:bg-secondary/5 rounded-xl text-center cursor-pointer border-2 border-dashed border-secondary/25 hover:border-tertiary/50 transition-all duration-200"
           >
             <svg
-              className="w-8 h-8 text-blue-600 mx-auto mb-2"
+              className="w-8 h-8 text-tertiary mx-auto mb-2 opacity-80"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -706,15 +743,15 @@ export default function EditProfileForm({
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            <p className="text-sm font-semibold text-gray-700">
+            <p className="text-sm font-bold text-primary">
               Click to upload resume
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-secondary mt-1">
               PDF, DOC, DOCX, TXT up to 50MB
             </p>
           </label>
           {uploadingResume && (
-            <div className="mt-3 flex items-center gap-2 text-blue-600">
+            <div className="mt-3 flex items-center gap-2 text-tertiary">
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
@@ -731,21 +768,21 @@ export default function EditProfileForm({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="text-sm">Uploading resume...</p>
+              <p className="text-sm font-semibold">Uploading resume...</p>
             </div>
           )}
         </div>
 
         {/* Availability */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Availability <span className="text-red-500">*</span>
           </label>
           <select
             name="availability"
             value={formData.availability}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-base"
           >
             <option value="not available">Not Available</option>
             <option value="part-time">Part-time</option>
@@ -755,24 +792,24 @@ export default function EditProfileForm({
 
         {/* Education */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Education <span className="text-red-500">*</span>
           </label>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {formData.education.map((edu, index) => (
               <div
                 key={index}
-                className="p-4 border border-gray-200 rounded-lg relative bg-white shadow-sm"
+                className="p-6 bg-surface border border-secondary/15 rounded-xl relative shadow-sm mb-6"
               >
                 <button
                   type="button"
                   onClick={() => removeArrayItem("education", index)}
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold"
+                  className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-error-700 hover:text-white bg-surface hover:bg-error-700 border border-secondary/25 transition-all duration-200 font-bold text-sm cursor-pointer"
                   title="Remove"
                 >
                   ✕
                 </button>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <input
                     type="text"
                     value={edu.school}
@@ -785,7 +822,7 @@ export default function EditProfileForm({
                       )
                     }
                     placeholder="School / College"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+                    className="input-base !py-2.5 !px-4 !text-sm"
                   />
                   <input
                     type="text"
@@ -799,12 +836,12 @@ export default function EditProfileForm({
                       )
                     }
                     placeholder="Degree / Standard"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+                    className="input-base !py-2.5 !px-4 !text-sm"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
+                    <label className="block text-xs font-semibold text-secondary mb-1.5">
                       From
                     </label>
                     <input
@@ -819,13 +856,13 @@ export default function EditProfileForm({
                           e.target.value,
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+                      className="input-base !py-2.5 !px-4 !text-sm"
                     />
                   </div>
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-xs text-gray-500">To</label>
-                      <label className="flex items-center gap-1 text-xs text-blue-600 font-semibold cursor-pointer">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-semibold text-secondary">To</label>
+                      <label className="flex items-center gap-1.5 text-xs text-tertiary font-bold cursor-pointer">
                         <input
                           type="checkbox"
                           checked={edu.isCurrentlyStudying || false}
@@ -837,7 +874,7 @@ export default function EditProfileForm({
                               e.target.checked,
                             )
                           }
-                          className="rounded text-blue-600 focus:ring-blue-500"
+                          className="w-4 h-4 rounded border-secondary/30 bg-surface text-tertiary focus:ring-tertiary/20"
                         />
                         Currently Studying
                       </label>
@@ -855,7 +892,7 @@ export default function EditProfileForm({
                         )
                       }
                       disabled={edu.isCurrentlyStudying}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                      className="input-base !py-2.5 !px-4 !text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -864,36 +901,36 @@ export default function EditProfileForm({
             <button
               type="button"
               onClick={() => addArrayItem("education")}
-              className="text-sm font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-2 flex items-center gap-2"
+              className="btn-secondary !py-2.5 !px-5 !text-sm !rounded-lg flex items-center gap-2"
             >
-              <span>+</span> Add Education
+              <span className="text-base font-bold">+</span> Add Education
             </button>
           </div>
         </div>
 
         {/* Experience */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Experience{" "}
             {Number(formData.yearsOfExperience) > 0 && (
               <span className="text-red-500">*</span>
             )}
           </label>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {formData.experience.map((exp, index) => (
               <div
                 key={index}
-                className="p-4 border border-gray-200 rounded-lg relative bg-white shadow-sm"
+                className="p-6 bg-surface border border-secondary/15 rounded-xl relative shadow-sm mb-6"
               >
                 <button
                   type="button"
                   onClick={() => removeArrayItem("experience", index)}
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold"
+                  className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-error-700 hover:text-white bg-surface hover:bg-error-700 border border-secondary/25 transition-all duration-200 font-bold text-sm cursor-pointer"
                   title="Remove"
                 >
                   ✕
                 </button>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <input
                     type="text"
                     value={exp.company}
@@ -906,7 +943,7 @@ export default function EditProfileForm({
                       )
                     }
                     placeholder="Company Name"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+                    className="input-base !py-2.5 !px-4 !text-sm"
                   />
                   <input
                     type="text"
@@ -920,12 +957,12 @@ export default function EditProfileForm({
                       )
                     }
                     placeholder="Role"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+                    className="input-base !py-2.5 !px-4 !text-sm"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
+                    <label className="block text-xs font-semibold text-secondary mb-1.5">
                       From
                     </label>
                     <input
@@ -940,13 +977,13 @@ export default function EditProfileForm({
                           e.target.value,
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm"
+                      className="input-base !py-2.5 !px-4 !text-sm"
                     />
                   </div>
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-xs text-gray-500">To</label>
-                      <label className="flex items-center gap-1 text-xs text-blue-600 font-semibold cursor-pointer">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-semibold text-secondary">To</label>
+                      <label className="flex items-center gap-1.5 text-xs text-tertiary font-bold cursor-pointer">
                         <input
                           type="checkbox"
                           checked={exp.to === "Present"}
@@ -958,7 +995,7 @@ export default function EditProfileForm({
                               e.target.checked ? "Present" : "",
                             )
                           }
-                          className="rounded text-blue-600 focus:ring-blue-500"
+                          className="w-4 h-4 rounded border-secondary/30 bg-surface text-tertiary focus:ring-tertiary/20"
                         />
                         Present
                       </label>
@@ -976,7 +1013,7 @@ export default function EditProfileForm({
                         )
                       }
                       disabled={exp.to === "Present"}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                      className="input-base !py-2.5 !px-4 !text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -985,16 +1022,16 @@ export default function EditProfileForm({
             <button
               type="button"
               onClick={() => addArrayItem("experience")}
-              className="text-sm font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-2 flex items-center gap-2"
+              className="btn-secondary !py-2.5 !px-5 !text-sm !rounded-lg flex items-center gap-2"
             >
-              <span>+</span> Add Experience
+              <span className="text-base font-bold">+</span> Add Experience
             </button>
           </div>
         </div>
 
         {/* Years of Experience */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Years of Experience
           </label>
           <input
@@ -1005,13 +1042,13 @@ export default function EditProfileForm({
             value={formData.yearsOfExperience}
             onChange={handleChange}
             placeholder="e.g. 2"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-base"
           />
         </div>
 
         {/* Skills */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Skills (comma separated) <span className="text-red-500">*</span>
           </label>
           <input
@@ -1020,14 +1057,14 @@ export default function EditProfileForm({
             value={formData.skills}
             onChange={handleChange}
             placeholder="e.g. React, Node.js, MongoDB, UI/UX"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-base"
           />
         </div>
 
         {/* Social Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-bold text-slate-700 mb-2.5">
               GitHub URL <span className="text-red-500">*</span>
             </label>
             <input
@@ -1036,11 +1073,11 @@ export default function EditProfileForm({
               value={formData.githubUrl}
               onChange={handleChange}
               placeholder="https://github.com/username"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-base"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-bold text-slate-700 mb-2.5">
               LinkedIn URL <span className="text-red-500">*</span>
             </label>
             <input
@@ -1049,13 +1086,13 @@ export default function EditProfileForm({
               value={formData.linkedinUrl}
               onChange={handleChange}
               placeholder="https://linkedin.com/in/username"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-base"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Portfolio URL
           </label>
           <input
@@ -1064,20 +1101,20 @@ export default function EditProfileForm({
             value={formData.portfolioUrl}
             onChange={handleChange}
             placeholder="https://yourportfolio.com"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-base"
           />
         </div>
 
         {/* Profile Visibility */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2.5">
             Profile Visibility
           </label>
           <select
             name="profileVisibility"
             value={formData.profileVisibility}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-base"
           >
             <option value="public">Public (visible to all users)</option>
             <option value="private">Private (only visible to you)</option>
@@ -1085,15 +1122,15 @@ export default function EditProfileForm({
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-4 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 btn-primary py-3 !rounded-lg"
           >
             {loading ? (
               <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
                   <circle
                     className="opacity-25"
                     cx="12"
@@ -1119,7 +1156,7 @@ export default function EditProfileForm({
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="btn-secondary px-8 !rounded-lg"
             >
               Cancel
             </button>

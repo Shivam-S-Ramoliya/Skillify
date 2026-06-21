@@ -33,7 +33,7 @@ export default function VerifyEmail() {
       setLoading(true);
       try {
         const response = await verifyEmail(defaultToken);
-        toast.success(response.message || "Email verified successfully!");
+        toast.success(response.message || "Email verified! Welcome to Skillify.");
         if (response.user?.profileComplete) {
           navigate("/dashboard", { replace: true });
         } else {
@@ -42,7 +42,7 @@ export default function VerifyEmail() {
       } catch (err) {
         // If already verified, treat as success and try to log them in
         if (err.message?.toLowerCase().includes("already verified")) {
-          toast.info("Email is already verified. Redirecting...");
+          toast.info("Your email is already verified. Redirecting...");
           // Try to check verification to get auth token
           if (defaultEmail) {
             try {
@@ -61,7 +61,7 @@ export default function VerifyEmail() {
           }
           navigate("/login", { replace: true });
         } else {
-          toast.error(err.message || "Verification failed");
+          toast.error(err.message || "Email verification failed. Please try again.");
           setLoading(false);
         }
       }
@@ -72,21 +72,21 @@ export default function VerifyEmail() {
 
   const handleCheckVerification = async () => {
     if (!email.trim()) {
-      toast.warning("Please enter your email address");
+      toast.warning("Please enter your email address to check status.");
       return;
     }
 
     setLoading(true);
     try {
       const response = await checkVerification(email.trim());
-      toast.success(response.message || "Email verified!");
+      toast.success(response.message || "Email is verified! You can log in now.");
       if (response.user?.profileComplete) {
         navigate("/dashboard");
       } else {
         navigate("/complete-profile");
       }
     } catch (err) {
-      toast.error(err.message || "Email is not verified yet");
+      toast.error(err.message || "Email is not verified yet. Please check your inbox.");
     } finally {
       setLoading(false);
     }
@@ -94,16 +94,16 @@ export default function VerifyEmail() {
 
   const handleResend = async () => {
     if (!email.trim()) {
-      toast.warning("Please enter your email address");
+      toast.warning("Please enter your email address to resend verification.");
       return;
     }
 
     setResendLoading(true);
     try {
       const response = await resendVerification(email.trim());
-      toast.success(response.message || "Verification email sent!");
+      toast.success(response.message || "Verification email sent! Check your inbox.");
     } catch (err) {
-      toast.error(err.message || "Failed to resend verification email");
+      toast.error(err.message || "Could not resend verification email. Please try again.");
     } finally {
       setResendLoading(false);
     }
@@ -112,13 +112,10 @@ export default function VerifyEmail() {
   return (
     <div className="page-wrap flex items-center justify-center min-h-[calc(100vh-160px)] py-12">
       <div className="w-full max-w-xl px-4">
-        <div className="overflow-hidden rounded-[2.5rem] bg-white shadow-2xl shadow-blue-500/10 backdrop-blur-xl border border-slate-200/60 animate-fade-in-up relative">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-50 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-100/40 rounded-full mix-blend-multiply filter blur-3xl opacity-50 pointer-events-none"></div>
-
+        <div className="overflow-hidden rounded-3xl border border-secondary/15 bg-surface shadow-sm animate-fade-in-up relative p-3">
           <div className="p-8 sm:p-12 relative z-10">
             <div className="text-center mb-10">
-              <div className="mx-auto w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mb-5">
+              <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-5 surface-sunken">
                 <svg
                   className="w-8 h-8 text-amber-600"
                   fill="none"
@@ -133,10 +130,10 @@ export default function VerifyEmail() {
                   />
                 </svg>
               </div>
-              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <h2 className="text-3xl font-extrabold text-primary tracking-tight">
                 Verify your email
               </h2>
-              <p className="mt-3 text-base font-medium text-slate-500">
+              <p className="mt-3 text-base font-semibold text-secondary">
                 We've sent a verification link to your email. Click it to verify, then come back here.
               </p>
             </div>
@@ -148,7 +145,7 @@ export default function VerifyEmail() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full text-center text-lg font-semibold rounded-2xl border border-slate-200 bg-white/80 px-4 py-5 text-slate-900 placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
+                className="input-base text-center text-lg font-bold py-5"
               />
             </div>
 
@@ -158,7 +155,7 @@ export default function VerifyEmail() {
                 type="button"
                 onClick={handleCheckVerification}
                 disabled={loading || !email.trim()}
-                className="btn-primary w-full py-4 text-lg tracking-wide shadow-xl shadow-blue-500/20"
+                className="btn-primary w-full py-4 text-lg tracking-wide shadow-md"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -253,10 +250,10 @@ export default function VerifyEmail() {
               </button>
             </div>
 
-            <div className="mt-10 pt-8 border-t border-slate-200/60 text-center">
+            <div className="mt-10 pt-8 border-t border-secondary/15 text-center">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-tertiary hover:underline transition-colors"
               >
                 <svg
                   className="w-4 h-4"

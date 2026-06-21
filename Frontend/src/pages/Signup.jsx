@@ -12,6 +12,7 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    username: "",
     location: "",
     password: "",
     confirmPassword: "",
@@ -120,41 +121,52 @@ export default function Signup() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.warning("Please enter your full name");
+      toast.warning("Full name is required.");
+      return;
+    }
+
+    if (!formData.username.trim()) {
+      toast.warning("Username is required.");
+      return;
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(formData.username)) {
+      toast.error("Username can only contain letters, numbers, and underscores — no spaces.");
       return;
     }
 
     if (!formData.email.trim()) {
-      toast.warning("Please enter your email address");
+      toast.warning("Email address is required.");
       return;
     }
 
     if (!formData.password) {
-      toast.warning("Please enter your password");
+      toast.warning("Password is required.");
       return;
     }
 
     if (!formData.confirmPassword) {
-      toast.warning("Please confirm your password");
+      toast.warning("Please confirm your password.");
       return;
     }
 
     setLoading(true);
 
     if (formData.name.length > 100) {
-      toast.error("Name must be 100 characters or less");
+      toast.error("Name must be 100 characters or less.");
       setLoading(false);
       return;
     }
 
     if (!formData.location) {
-      toast.error("Please select your country, state, and city");
+      toast.error("Location is required. Please select your country, state, and city.");
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 8 || formData.password.length > 50) {
-      toast.error("Password must be between 8 and 50 characters");
+      toast.error("Password must be between 8 and 50 characters.");
       setLoading(false);
       return;
     }
@@ -172,7 +184,7 @@ export default function Signup() {
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("Passwords do not match. Please try again.");
       setLoading(false);
       return;
     }
@@ -184,7 +196,7 @@ export default function Signup() {
         navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
       }
     } catch (err) {
-      toast.error(err.message || "Signup failed");
+      toast.error(err.message || "Signup failed. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -192,24 +204,21 @@ export default function Signup() {
 
   return (
     <div className="page-wrap flex items-center justify-center min-h-[calc(100vh-160px)] py-12">
-      <div className="w-full max-w-[70%] px-4">
+      <div className="w-full max-w-full md:max-w-[75%] px-2 md:px-4">
         <div
-          className="overflow-hidden rounded-2xl bg-white shadow-lg grid lg:grid-cols-5"
-          style={{ border: "1px solid var(--color-neutral-200)" }}
+          className="overflow-hidden rounded-3xl bg-surface shadow-sm grid lg:grid-cols-5 border border-secondary/15 p-3"
         >
           {/* Form Section (col-span-3) */}
-          <div className="flex w-full flex-col justify-center p-8 sm:p-10 lg:p-12 animate-fade-in z-10 bg-white lg:col-span-3 lg:order-2">
+          <div className="flex w-full flex-col justify-center p-8 sm:p-10 lg:p-12 animate-fade-in z-10 bg-surface lg:col-span-3 lg:order-2">
             <div className="mx-auto w-full max-w-lg">
               <div className="text-center mb-8">
                 <h2
-                  className="text-3xl font-bold tracking-tight"
-                  style={{ color: "var(--color-neutral-900)" }}
+                  className="text-3xl font-bold tracking-tight text-primary"
                 >
                   Create an account
                 </h2>
                 <p
-                  className="mt-2 text-sm font-medium"
-                  style={{ color: "var(--color-neutral-500)" }}
+                  className="mt-2 text-sm font-semibold text-secondary"
                 >
                   Join Skillify and build your freelance career.
                 </p>
@@ -218,8 +227,7 @@ export default function Signup() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label
-                    className="mb-2 block text-sm font-semibold"
-                    style={{ color: "var(--color-neutral-700)" }}
+                    className="mb-2 block text-sm font-bold text-slate-705"
                   >
                     Full Name
                   </label>
@@ -237,8 +245,24 @@ export default function Signup() {
 
                 <div>
                   <label
-                    className="mb-2 block text-sm font-semibold"
-                    style={{ color: "var(--color-neutral-700)" }}
+                    className="mb-2 block text-sm font-bold text-slate-705"
+                  >
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                    placeholder="john_doe"
+                    className="input-base"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="mb-2 block text-sm font-bold text-slate-705"
                   >
                     Email Address
                   </label>
@@ -255,8 +279,7 @@ export default function Signup() {
 
                 <div>
                   <label
-                    className="mb-2 block text-sm font-semibold"
-                    style={{ color: "var(--color-neutral-700)" }}
+                    className="mb-2 block text-sm font-bold text-slate-705"
                   >
                     Location
                   </label>
@@ -281,12 +304,6 @@ export default function Signup() {
                       required={states.length > 0}
                       disabled={!selectedCountryCode || states.length === 0}
                       className="input-base px-3 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        backgroundColor:
-                          !selectedCountryCode || states.length === 0
-                            ? "var(--color-neutral-100)"
-                            : "white",
-                      }}
                     >
                       <option value="">
                         {selectedCountryCode
@@ -308,12 +325,6 @@ export default function Signup() {
                       required={cities.length > 0}
                       disabled={!selectedCountryCode || cities.length === 0}
                       className="input-base px-3 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        backgroundColor:
-                          !selectedCountryCode || cities.length === 0
-                            ? "var(--color-neutral-100)"
-                            : "white",
-                      }}
                     >
                       <option value="">
                         {selectedCountryCode
@@ -333,8 +344,7 @@ export default function Signup() {
                     </select>
                   </div>
                   <p
-                    className="text-xs font-medium mt-2"
-                    style={{ color: "var(--color-neutral-500)" }}
+                    className="text-xs font-semibold mt-2 text-secondary"
                   >
                     Selected: {formData.location || "-"}
                   </p>
@@ -343,8 +353,7 @@ export default function Signup() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label
-                      className="mb-2 block text-sm font-semibold"
-                      style={{ color: "var(--color-neutral-700)" }}
+                      className="mb-2 block text-sm font-bold text-slate-705"
                     >
                       Password
                     </label>
@@ -363,8 +372,7 @@ export default function Signup() {
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-3 flex items-center transition-colors"
-                        style={{ color: "var(--color-neutral-400)" }}
+                        className="absolute inset-y-0 right-3 flex items-center transition-colors text-secondary/70 hover:text-primary"
                         tabIndex={-1}
                       >
                         {showPassword ? (
@@ -407,8 +415,7 @@ export default function Signup() {
 
                   <div>
                     <label
-                      className="mb-2 block text-sm font-semibold"
-                      style={{ color: "var(--color-neutral-700)" }}
+                      className="mb-2 block text-sm font-bold text-slate-705"
                     >
                       Confirm Password
                     </label>
@@ -427,8 +434,7 @@ export default function Signup() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-3 flex items-center transition-colors"
-                        style={{ color: "var(--color-neutral-400)" }}
+                        className="absolute inset-y-0 right-3 flex items-center transition-colors text-secondary/70 hover:text-primary"
                         tabIndex={-1}
                       >
                         {showConfirmPassword ? (
@@ -471,15 +477,10 @@ export default function Signup() {
                 </div>
 
                 <div
-                  className="space-y-1.5 p-4 rounded-xl mb-2"
-                  style={{
-                    backgroundColor: "var(--color-neutral-50)",
-                    border: "1px solid var(--color-neutral-200)",
-                  }}
+                  className="space-y-1.5 p-4 rounded-xl mb-2 surface-sunken"
                 >
                   <p
-                    className="text-xs font-semibold mb-2 uppercase tracking-wide"
-                    style={{ color: "var(--color-neutral-700)" }}
+                    className="text-xs font-bold mb-2 uppercase tracking-wide text-primary"
                   >
                     Password requirements:
                   </p>
@@ -487,12 +488,9 @@ export default function Signup() {
                     {getPasswordChecks(formData.password).map((check) => (
                       <div
                         key={check.label}
-                        className="text-xs flex items-center gap-1.5 font-medium"
-                        style={{
-                          color: check.ok
-                            ? "var(--color-accent-600)"
-                            : "var(--color-neutral-500)",
-                        }}
+                        className={`text-xs flex items-center gap-1.5 font-bold ${
+                          check.ok ? "text-success-700" : "text-secondary/70"
+                        }`}
                       >
                         {check.ok ? (
                           <svg
@@ -558,21 +556,15 @@ export default function Signup() {
               </form>
 
               <div
-                className="mt-8 text-center p-4 rounded-xl"
-                style={{
-                  backgroundColor: "var(--color-neutral-50)",
-                  border: "1px solid var(--color-neutral-100)",
-                }}
+                className="mt-8 text-center p-4 rounded-xl surface-sunken"
               >
                 <p
-                  className="text-sm font-medium"
-                  style={{ color: "var(--color-neutral-600)" }}
+                  className="text-sm font-semibold text-secondary"
                 >
                   Already have an account?{" "}
                   <Link
                     to="/login"
-                    className="font-semibold transition-colors ml-1"
-                    style={{ color: "var(--color-primary-600)" }}
+                    className="font-bold transition-colors ml-1 text-tertiary hover:underline"
                   >
                     Sign in here
                   </Link>
@@ -583,16 +575,11 @@ export default function Signup() {
 
           {/* Decorative Section (col-span-2) */}
           <div
-            className="relative hidden w-full flex-col items-center justify-center p-12 lg:flex text-white overflow-hidden lg:col-span-2 lg:order-1"
-            style={{ backgroundColor: "var(--color-primary-600)" }}
+            className="relative hidden w-full flex-col items-center justify-center p-12 lg:flex text-white overflow-hidden lg:col-span-2 lg:order-1 rounded-2xl bg-primary animate-fade-in"
           >
             <div className="relative z-10 w-full text-center animate-fade-in-up">
               <div
-                className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-8"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                }}
+                className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-8 bg-white/20 border border-white/20 shadow-sm"
               >
                 <svg
                   className="w-10 h-10 text-white"
@@ -612,26 +599,17 @@ export default function Signup() {
                 Join our network
               </h1>
               <p
-                className="text-base max-w-sm mx-auto leading-relaxed mb-8"
-                style={{ color: "var(--color-primary-100)" }}
+                className="text-base max-w-sm mx-auto leading-relaxed mb-8 opacity-90"
               >
                 Connect with clients and discover high-quality projects. Build
                 your career by shipping real work with the perfect team.
               </p>
 
               <div
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  border: "1px solid rgba(255,255,255,0.3)",
-                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold bg-white/20 border border-white/30 uppercase"
               >
                 <span
-                  className="flex h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor: "var(--color-accent-400)",
-                    boxShadow: "0 0 8px rgba(74, 222, 128, 0.8)",
-                  }}
+                  className="flex h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
                 ></span>
                 Thousands of active jobs
               </div>
