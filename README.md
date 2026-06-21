@@ -154,8 +154,10 @@ MONGODB_URI=mongodb://localhost:27017/skillify
 JWT_SECRET=your_jwt_secret
 NODE_ENV=development
 
-# Email Configuration (Resend) - Currently Active
-RESEND_API_KEY=your_resend_api_key
+# Email Configuration (Brevo HTTP API) - Currently Active
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_EMAIL=your-sender-email@example.com
+BREVO_SENDER_NAME=Skillify
 
 # Nodemailer Gmail SMTP (Backup - use with emailService_Nodemailer.js)
 # EMAIL_USER=your-email@example.com
@@ -200,17 +202,17 @@ Skillify uses **two email service files**:
 
 | File | Transport | When to use |
 |------|-----------|-------------|
-| `emailService.js` | **Resend HTTP API** | Production (Render) — active |
+| `emailService.js` | **Brevo HTTP API** | Production (Render) — active |
 | `emailService_Nodemailer.js` | **Gmail SMTP** | Local dev or non-Render hosts — backup |
 
-**To switch to Nodemailer:** rename `emailService_Nodemailer.js` → `emailService.js`, uncomment the `EMAIL_*` variables in `.env`, and comment out `RESEND_API_KEY`.
+**To switch to Nodemailer:** rename `emailService_Nodemailer.js` → `emailService.js`, uncomment the `EMAIL_*` variables in `.env`, and comment out `BREVO_*` variables.
 
-> **Why Resend?** Render's free tier blocks outbound SMTP (ports 25/465/587). Resend uses HTTPS (port 443).
+> **Why Brevo?** Render's free tier blocks outbound SMTP (ports 25/465/587). Brevo's HTTP API uses standard HTTPS (port 443) which works seamlessly.
 
 ## 🆘 Troubleshooting quick notes
 
 - If uploads fail, verify Cloudinary credentials and file size limits. 📤
-- If emails fail (Resend), verify `RESEND_API_KEY` is set correctly. 📧
+- If emails fail (Brevo), verify `BREVO_API_KEY` is set correctly. 📧
 - If emails fail (Nodemailer), verify `EMAIL_USER` and `EMAIL_PASS` (Gmail app password). 📧
 - If frontend cannot reach backend, check API base URL and CORS/client URL settings. 🌐
 
